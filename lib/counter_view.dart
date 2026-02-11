@@ -102,6 +102,14 @@ class _CounterViewState extends State<CounterView> {
                             Navigator.pop(context);
                             setState(() {
                               _controller.reset();
+                              final snackBar = SnackBar(
+                                content: const Text(
+                                  "Counter berhasil di Reset!",
+                                ),
+                              );
+                              ScaffoldMessenger.of(
+                                context,
+                              ).showSnackBar(snackBar);
                             });
                           },
                           child: const Text("Reset"),
