@@ -13,10 +13,11 @@ class CounterController {
 
   // void reset() => _counter = 0;
 
-  //* ## TASK 1: Tambahkan fitur step increment dan step decrement sebesar 5
+  //* ## TASK 1: Tambahkan fitur step increment dan step decrement menggunakan input dinamis
   // variabel
   int _step = 1;
-  final int _size = 5;
+  int _size = 1;
+  final int _limit = 5;
   final List<String> _history = [];
 
   // Getter
@@ -24,13 +25,22 @@ class CounterController {
   List<String> get history => _history;
 
   // Methods
-  void increment() {
+  void increment(String input) {
+    final parse = int.tryParse(input);
+
+    if (parse == null || parse <= 0) return;
+    _size = parse;
     _step += _size;
     _addHistory("User menambah nilai sebesar $_size");
   }
 
-  void decrement() {
+  void decrement(String input) {
+    final parse = int.tryParse(input);
+
+    if (parse == null || parse <= 0) return;
+
     if (_step > 1) {
+      _size = parse;
       _step -= _size;
       _addHistory("User mengurangi nilai sebesar $_size");
     }
@@ -46,7 +56,7 @@ class CounterController {
     final timeStamp = DateTime.now();
     _history.insert(0, "$teks pada jam $timeStamp");
 
-    if (_history.length > _size) {
+    if (_history.length > _limit) {
       _history.removeLast();
     }
   }

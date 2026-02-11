@@ -9,6 +9,7 @@ class CounterView extends StatefulWidget {
 
 class _CounterViewState extends State<CounterView> {
   final CounterController _controller = CounterController();
+  final TextEditingController _textController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -24,17 +25,44 @@ class _CounterViewState extends State<CounterView> {
             const Text("Total Hitungan Step: "),
             Text('${_controller.value}', style: const TextStyle(fontSize: 40)),
             const SizedBox(height: 20),
+            TextField(
+              controller: _textController,
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: Colors.white,
+                focusColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                hintText: 'Masukan angka',
+                hintStyle: const TextStyle(color: Colors.grey),
+              ),
+            ),
             const Text(
               "History Step:",
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
+
             const SizedBox(height: 10),
             Expanded(
               child: ListView.builder(
                 itemCount: _controller.history.length,
                 itemBuilder: (context, index) {
+                  String entry = _controller.history[index];
+
+                  Color text = Colors.black;
+                  if (entry.contains("menambah")) {
+                    text = Colors.green;
+                  } else if (entry.contains("mengurangi")) {
+                    text = Colors.red;
+                  } else if (entry.contains("reset")) {
+                    text = Colors.blue;
+                  }
+
                   return Card(
-                    child: ListTile(title: Text(_controller.history[index])),
+                    child: ListTile(
+                      title: Text(entry, style: TextStyle(color: text)),
+                    ),
                   );
                 },
               ),
@@ -48,15 +76,46 @@ class _CounterViewState extends State<CounterView> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             FloatingActionButton(
-              onPressed: () => setState(() => _controller.decrement()),
+              onPressed: () =>
+                  setState(() => _controller.decrement(_textController.text)),
               child: const Icon(Icons.remove),
             ),
             FloatingActionButton(
-              onPressed: () => setState(() => _controller.reset()),
+              onPressed: () => {
+                showDialog<String>(
+                  context: context,
+                  builder: (context) {
+                    return AlertDialog(
+                      title: const Text("Reset Counter"),
+                      content: const Text(
+                        "Apakah Anda yakin ingin mereset counter?",
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          child: const Text("Batal"),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            setState(() {
+                              _controller.reset();
+                            });
+                          },
+                          child: const Text("Reset"),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              },
               child: const Text("Reset"),
             ),
             FloatingActionButton(
-              onPressed: () => setState(() => _controller.increment()),
+              onPressed: () =>
+                  setState(() => _controller.increment(_textController.text)),
               child: const Icon(Icons.add),
             ),
           ],
