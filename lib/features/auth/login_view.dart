@@ -11,6 +11,7 @@ class LoginView extends StatefulWidget {
 class _LoginViewState extends State<LoginView> {
   int _attempts = 0;
   bool _isLocked = false;
+  bool _passVisibility = true;
   final LoginController _controller = LoginController();
   final TextEditingController _userController = TextEditingController();
   final TextEditingController _passController = TextEditingController();
@@ -84,8 +85,19 @@ class _LoginViewState extends State<LoginView> {
             ),
             TextField(
               controller: _passController,
-              obscureText: true,
-              decoration: const InputDecoration(labelText: "Password"),
+              obscureText: _passVisibility,
+              decoration: InputDecoration(
+                labelText: "Password",
+                suffixIcon: IconButton(
+                  icon: _passVisibility
+                      ? Icon(Icons.visibility_off)
+                      : Icon(Icons.visibility),
+                  onPressed: () {
+                    _passVisibility = !_passVisibility;
+                    setState(() {});
+                  },
+                ),
+              ),
             ),
             const SizedBox(height: 20),
             ElevatedButton(
