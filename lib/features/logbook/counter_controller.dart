@@ -1,17 +1,17 @@
+import 'package:shared_preferences/shared_preferences.dart';
+
 class CounterController {
-  //* ## Template Code Counter
-  // int _counter = 0; //variable
-  // int get value => _counter; //getter
+  // Fungsi menyimpan angka terakhir
+  Future<void> saveLastValue(int value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('last_counter', value);
+  }
 
-  // void increment() => _counter++;
-
-  // void decrement() {
-  //   if (_counter > 0) {
-  //     _counter--;
-  //   }
-  // }
-
-  // void reset() => _counter = 0;
+  // Fungsi membaca data / load
+  Future<int> loadLastValue() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt('last_counter') ?? 0;
+  }
 
   //* ## TASK 1: Tambahkan fitur step increment dan step decrement menggunakan input dinamis
   // variabel
@@ -19,22 +19,30 @@ class CounterController {
   int _size = 1;
   final int _limit = 5;
   final List<String> _history = [];
+  static const String _counterKey = "counter_value";
 
   // Getter
   int get value => _step;
   List<String> get history => _history;
 
   // Methods
-  void increment(String input) {
+  Future<void> init() async {
+    _step = await loadLastValue();
+    await _loadHistory();
+  }
+
+  Future<void> increment(String input) async {
     final parse = int.tryParse(input);
 
     if (parse == null || parse <= 0) return;
     _size = parse;
     _step += _size;
-    _addHistory("User menambah nilai sebesar $_size");
+
+    await saveLastValue(_step);
+    await _addHistory("User menambah nilai sebesar $_size");
   }
 
-  void decrement(String input) {
+  Future<void> decrement(String input) async {
     final parse = int.tryParse(input);
 
     if (parse == null || parse <= 0) return;
@@ -42,22 +50,43 @@ class CounterController {
     if (_step > 1) {
       _size = parse;
       _step -= _size;
-      _addHistory("User mengurangi nilai sebesar $_size");
+
+      await saveLastValue(_step);
+      await _addHistory("User mengurangi nilai sebesar $_size");
     }
   }
 
-  void reset() {
+  Future<void> reset() async {
     _step = 1;
-    _addHistory("User reset ke $_step");
+
+    await saveLastValue(_step);
+    await _addHistory("User reset ke $_step");
+  }
+
+  Future<void> _saveHistory() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(_counterKey, _history);
+  }
+
+  Future<void> _loadHistory() async {
+    final prefs = await SharedPreferences.getInstance();
+    final data = prefs.getStringList(_counterKey);
+
+    _history.clear();
+    if (data != null) {
+      _history.addAll(data);
+    }
   }
 
   //* ## TASK 2: Tambahkan fitur history untuk menyimpan nilai-nilai step sebelumnya
-  void _addHistory(String teks) {
+  Future<void> _addHistory(String teks, {String user = "User"}) async {
     final timeStamp = DateTime.now();
-    _history.insert(0, "$teks pada jam $timeStamp");
+    _history.insert(0, "$user: $teks pada jam $timeStamp");
 
     if (_history.length > _limit) {
       _history.removeLast();
     }
+
+    await _saveHistory();
   }
 }

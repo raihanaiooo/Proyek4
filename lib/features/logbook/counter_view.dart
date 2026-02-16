@@ -15,6 +15,14 @@ class _CounterViewState extends State<CounterView> {
   final TextEditingController _textController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    _controller.init().then((_) {
+      setState(() {});
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -122,8 +130,9 @@ class _CounterViewState extends State<CounterView> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             FloatingActionButton(
-              onPressed: () =>
-                  setState(() => _controller.decrement(_textController.text)),
+              onPressed: () async => await _controller
+                  .decrement(_textController.text)
+                  .then((_) => setState(() {})),
               child: const Icon(Icons.remove),
             ),
             FloatingActionButton(
@@ -144,19 +153,15 @@ class _CounterViewState extends State<CounterView> {
                           child: const Text("Batal"),
                         ),
                         TextButton(
-                          onPressed: () {
+                          onPressed: () async {
                             Navigator.pop(context);
-                            setState(() {
-                              _controller.reset();
-                              final snackBar = SnackBar(
-                                content: const Text(
-                                  "Counter berhasil di Reset!",
-                                ),
-                              );
-                              ScaffoldMessenger.of(
-                                context,
-                              ).showSnackBar(snackBar);
-                            });
+                            await _controller.reset();
+                            final snackBar = SnackBar(
+                              content: const Text("Counter berhasil di Reset!"),
+                            );
+                            ScaffoldMessenger.of(
+                              context,
+                            ).showSnackBar(snackBar);
                           },
                           child: const Text("Reset"),
                         ),
@@ -168,8 +173,9 @@ class _CounterViewState extends State<CounterView> {
               child: const Text("Reset"),
             ),
             FloatingActionButton(
-              onPressed: () =>
-                  setState(() => _controller.increment(_textController.text)),
+              onPressed: () async => await _controller
+                  .increment(_textController.text)
+                  .then((_) => setState(() {})),
               child: const Icon(Icons.add),
             ),
           ],
@@ -178,27 +184,3 @@ class _CounterViewState extends State<CounterView> {
     );
   }
 }
-
-
-// Center(
-//         child: ListView(
-//           scrollDirection: Axis.vertical,
-//           children: [
-//             Column(
-//               mainAxisAlignment: MainAxisAlignment.center,
-//               children: [
-//                 const Text("Total Hitungan Step: "),
-//                 Text(
-//                   '${_controller.value}',
-//                   style: const TextStyle(fontSize: 40),
-//                 ),
-//               ],
-//             ),
-//             Column(
-//               mainAxisAlignment: MainAxisAlignment.center,
-//               children: [const Text("History Step: ")],
-//             ),
-//             const SizedBox(width: 50),
-//           ],
-//         ),
-//       ),
