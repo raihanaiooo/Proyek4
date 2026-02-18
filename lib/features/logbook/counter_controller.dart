@@ -89,4 +89,21 @@ class CounterController {
 
     await _saveHistory();
   }
+
+  String getGreeting({required String username, required DateTime login}) {
+    final hour = login.hour;
+    String greeting;
+
+    if (hour >= 6 && hour <= 11) {
+      greeting = "Selamat Pagi";
+    } else if (hour >= 12 && hour <= 15) {
+      greeting = "Selamat Siang";
+    } else if (hour >= 16 && hour <= 18) {
+      greeting = "Selamat Sore";
+    } else {
+      greeting = "Selamat Malam";
+    }
+
+    return "$greeting, $username!";
+  }
 }

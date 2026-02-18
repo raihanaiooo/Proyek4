@@ -35,7 +35,10 @@ class _LoginViewState extends State<LoginView> {
       _attempts = 0;
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => CounterView(username: user)),
+        MaterialPageRoute(
+          builder: (context) =>
+              CounterView(username: user, login: DateTime.now()),
+        ),
       );
     } else {
       _attempts++;
@@ -74,37 +77,98 @@ class _LoginViewState extends State<LoginView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Login Gatekeeper")),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: _userController,
-              decoration: const InputDecoration(labelText: "Username"),
+      backgroundColor: Colors.green.shade700,
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Card(
+            color: Colors.white,
+            elevation: 8,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
             ),
-            TextField(
-              controller: _passController,
-              obscureText: _passVisibility,
-              decoration: InputDecoration(
-                labelText: "Password",
-                suffixIcon: IconButton(
-                  icon: _passVisibility
-                      ? Icon(Icons.visibility_off)
-                      : Icon(Icons.visibility),
-                  onPressed: () {
-                    _passVisibility = !_passVisibility;
-                    setState(() {});
-                  },
-                ),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    "Login",
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green.shade700,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  TextField(
+                    controller: _userController,
+                    decoration: InputDecoration(
+                      labelText: "Username",
+                      prefixIcon: Icon(
+                        Icons.person,
+                        color: Colors.green.shade700,
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.green.shade700),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: _passController,
+                    obscureText: _passVisibility,
+                    decoration: InputDecoration(
+                      labelText: "Password",
+                      prefixIcon: Icon(
+                        Icons.lock,
+                        color: Colors.green.shade700,
+                      ),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _passVisibility
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                          color: Colors.green.shade700,
+                        ),
+                        onPressed: () {
+                          _passVisibility = !_passVisibility;
+                          setState(() {});
+                        },
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.green.shade700),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _isLocked ? null : _handleLogin,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green.shade700,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(_isLocked ? "Tunggu 10 detik" : "Masuk"),
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _isLocked ? null : _handleLogin,
-              child: Text(_isLocked ? "Tunggu 10 detik" : "Masuk"),
-            ),
-          ],
+          ),
         ),
       ),
     );

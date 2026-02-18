@@ -4,8 +4,9 @@ import 'counter_controller.dart';
 
 class CounterView extends StatefulWidget {
   final String username;
+  final DateTime login;
 
-  const CounterView({super.key, required this.username});
+  const CounterView({super.key, required this.username, required this.login});
   @override
   State<CounterView> createState() => _CounterViewState();
 }
@@ -27,7 +28,7 @@ class _CounterViewState extends State<CounterView> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text("Logbook: ${widget.username}"),
+        // title: Text("Logbook: ${widget.username}"),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
@@ -74,7 +75,13 @@ class _CounterViewState extends State<CounterView> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            Text("Selamat Datang, ${widget.username}!"),
+            Text(
+              _controller.getGreeting(
+                username: widget.username,
+                login: widget.login,
+              ),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+            ),
             const SizedBox(height: 20),
             const Text("Total Hitungan Step: "),
             Text('${_controller.value}', style: const TextStyle(fontSize: 40)),
@@ -112,7 +119,6 @@ class _CounterViewState extends State<CounterView> {
                   } else if (entry.contains("reset")) {
                     text = Colors.blue;
                   }
-
                   return Card(
                     child: ListTile(
                       title: Text(entry, style: TextStyle(color: text)),
@@ -156,6 +162,7 @@ class _CounterViewState extends State<CounterView> {
                           onPressed: () async {
                             Navigator.pop(context);
                             await _controller.reset();
+                            setState(() {});
                             final snackBar = SnackBar(
                               content: const Text("Counter berhasil di Reset!"),
                             );

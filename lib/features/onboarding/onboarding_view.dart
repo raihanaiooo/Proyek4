@@ -30,12 +30,14 @@ class _OnboardingViewState extends State<OnboardingView> {
   ];
 
   void _nextStep() {
-    setState(() => step++);
-    if (step > _pages.length) {
+    if (step == _pages.length) {
+      if (!mounted) return;
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const LoginView()),
       );
+    } else {
+      setState(() => step++);
     }
   }
 
