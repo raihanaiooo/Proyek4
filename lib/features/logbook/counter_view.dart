@@ -18,7 +18,7 @@ class _CounterViewState extends State<CounterView> {
   @override
   void initState() {
     super.initState();
-    _controller.init().then((_) {
+    _controller.init(widget.username).then((_) {
       setState(() {});
     });
   }

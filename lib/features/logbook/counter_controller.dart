@@ -1,16 +1,18 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 class CounterController {
+  String _username = "User";
+
   // Fungsi menyimpan angka terakhir
-  Future<void> saveLastValue(int value) async {
+  Future<void> saveLastValue(int value, String username) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('last_counter', value);
+    await prefs.setInt('last_counter_$username', value);
   }
 
   // Fungsi membaca data / load
-  Future<int> loadLastValue() async {
+  Future<int> loadLastValue(String username) async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getInt('last_counter') ?? 0;
+    return prefs.getInt('last_counter_$username') ?? 0;
   }
 
   //* ## TASK 1: Tambahkan fitur step increment dan step decrement menggunakan input dinamis
@@ -19,15 +21,16 @@ class CounterController {
   int _size = 1;
   final int _limit = 5;
   final List<String> _history = [];
-  static const String _counterKey = "counter_value";
+  String get _historyKey => "counter_value_$_username";
 
   // Getter
   int get value => _step;
   List<String> get history => _history;
 
   // Methods
-  Future<void> init() async {
-    _step = await loadLastValue();
+  Future<void> init(String username) async {
+    _username = username;
+    _step = await loadLastValue(username);
     await _loadHistory();
   }
 
@@ -38,7 +41,7 @@ class CounterController {
     _size = parse;
     _step += _size;
 
-    await saveLastValue(_step);
+    await saveLastValue(_step, _username);
     await _addHistory("User menambah nilai sebesar $_size");
   }
 
@@ -51,7 +54,7 @@ class CounterController {
       _size = parse;
       _step -= _size;
 
-      await saveLastValue(_step);
+      await saveLastValue(_step, _username);
       await _addHistory("User mengurangi nilai sebesar $_size");
     }
   }
@@ -59,18 +62,18 @@ class CounterController {
   Future<void> reset() async {
     _step = 1;
 
-    await saveLastValue(_step);
+    await saveLastValue(_step, _username);
     await _addHistory("User reset ke $_step");
   }
 
   Future<void> _saveHistory() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(_counterKey, _history);
+    await prefs.setStringList(_historyKey, _history);
   }
 
   Future<void> _loadHistory() async {
     final prefs = await SharedPreferences.getInstance();
-    final data = prefs.getStringList(_counterKey);
+    final data = prefs.getStringList(_historyKey);
 
     _history.clear();
     if (data != null) {
