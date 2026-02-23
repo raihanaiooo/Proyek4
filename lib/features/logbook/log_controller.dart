@@ -5,7 +5,13 @@ import '../logbook/models/log_model.dart';
 
 class LogController {
   final ValueNotifier<List<LogModel>> logsNotifier = ValueNotifier([]);
-  static const String _storageKey = 'user_logs_data';
+  String _username = "User";
+  String get _storageKey => "user_logs_data_$_username";
+
+  Future<void> init(String username) async {
+    _username = username;
+    await loadFromDisk();
+  }
 
   LogController() {
     loadFromDisk();

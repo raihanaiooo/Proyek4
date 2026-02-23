@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'models/log_model.dart';
 import 'log_controller.dart';
+import '../onboarding/onboarding_view.dart';
 
 class LogView extends StatefulWidget {
-  const LogView({super.key});
+  final String username;
+  const LogView({super.key, required this.username});
 
   @override
   State<LogView> createState() => _LogViewState();
@@ -13,6 +15,12 @@ class _LogViewState extends State<LogView> {
   final LogController _controller = LogController();
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.init(widget.username);
+  }
 
   void _showAddLogDialog() {
     showDialog(
@@ -41,7 +49,7 @@ class _LogViewState extends State<LogView> {
             onPressed: () {
               _controller.addLog(_titleController.text, _descController.text);
 
-              setState(() {});
+              // setState(() {});
 
               _titleController.clear();
               _descController.clear();
@@ -94,7 +102,48 @@ class _LogViewState extends State<LogView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Logbook')),
+      appBar: AppBar(
+        title: const Text('Logbook'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: const Text(
+                      "Apakah Anda yakin? Data yang belum disimpan mungkin akan hilang.",
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text("Batal"),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const OnboardingView(),
+                            ),
+                            (route) => false,
+                          );
+                        },
+                        child: const Text(
+                          "Ya, Keluar",
+                          style: TextStyle(color: Colors.red),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+          ),
+        ],
+      ),
       body: ValueListenableBuilder<List<LogModel>>(
         valueListenable: _controller.logsNotifier,
         builder: (context, currentLogs, child) {
