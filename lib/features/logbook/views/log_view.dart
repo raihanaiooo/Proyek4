@@ -146,15 +146,13 @@ class _LogViewState extends State<LogView> {
         ],
       ),
       body: ValueListenableBuilder<List<LogModel>>(
-        valueListenable: _controller.logsNotifier,
+        valueListenable: _controller.filteredLogs,
         builder: (context, currentLogs, child) {
           if (currentLogs.isEmpty) {
             return const Center(child: Text('Belum ada catatan.'));
           }
-
           return Column(
             children: [
-              // SEARCH FIELD
               Padding(
                 padding: const EdgeInsets.all(12.0),
                 child: TextField(
@@ -166,8 +164,6 @@ class _LogViewState extends State<LogView> {
                   ),
                 ),
               ),
-
-              // LIST
               Expanded(
                 child: ListView.builder(
                   itemCount: currentLogs.length,

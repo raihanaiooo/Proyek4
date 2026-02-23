@@ -35,6 +35,7 @@ class LogController {
       date: DateTime.now().toString(),
     );
     logsNotifier.value = [...logsNotifier.value, newLog];
+    filteredLogs.value = logsNotifier.value;
     saveToDisk();
   }
 
@@ -46,6 +47,7 @@ class LogController {
       date: DateTime.now().toString(),
     );
     logsNotifier.value = currentLogs;
+    filteredLogs.value = logsNotifier.value;
     saveToDisk();
   }
 
@@ -53,6 +55,7 @@ class LogController {
     final currentLogs = List<LogModel>.from(logsNotifier.value);
     currentLogs.removeAt(index);
     logsNotifier.value = currentLogs;
+    filteredLogs.value = logsNotifier.value;
     saveToDisk();
   }
 
@@ -71,5 +74,6 @@ class LogController {
       final List decoded = jsonDecode(data);
       logsNotifier.value = decoded.map((e) => LogModel.fromMap(e)).toList();
     }
+    filteredLogs.value = logsNotifier.value;
   }
 }
