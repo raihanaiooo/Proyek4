@@ -5,6 +5,7 @@ import '../models/log_model.dart';
 
 class LogController {
   final ValueNotifier<List<LogModel>> logsNotifier = ValueNotifier([]);
+  ValueNotifier<List<LogModel>> filteredLogs = ValueNotifier([]);
   String _username = "User";
   String get _storageKey => "user_logs_data_$_username";
 
@@ -15,6 +16,16 @@ class LogController {
 
   LogController() {
     loadFromDisk();
+  }
+
+  void searchLog(String query) {
+    if (query.isEmpty) {
+      filteredLogs.value = logsNotifier.value;
+    } else {
+      filteredLogs.value = logsNotifier.value
+          .where((log) => log.title.toLowerCase().contains(query.toLowerCase()))
+          .toList();
+    }
   }
 
   void addLog(String title, String desc) {

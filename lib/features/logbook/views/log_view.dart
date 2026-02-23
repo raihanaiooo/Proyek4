@@ -151,16 +151,54 @@ class _LogViewState extends State<LogView> {
           if (currentLogs.isEmpty) {
             return const Center(child: Text('Belum ada catatan.'));
           }
-          return ListView.builder(
-            itemCount: currentLogs.length,
-            itemBuilder: (context, index) {
-              final log = currentLogs[index];
-              return LogItemWidget(
-                log: log,
-                onEdit: () => _showEditLogDialog(index, log),
-                onDelete: () => _controller.removeLog(index),
-              );
-            },
+
+          return Column(
+            children: [
+              // SEARCH FIELD
+              Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: TextField(
+                  onChanged: (value) => _controller.searchLog(value),
+                  decoration: const InputDecoration(
+                    hintText: 'Cari catatan...',
+                    prefixIcon: Icon(Icons.search),
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ),
+
+              // LIST
+              Expanded(
+                child: ListView.builder(
+                  itemCount: currentLogs.length,
+                  itemBuilder: (context, index) {
+                    final log = currentLogs[index];
+
+                    return Dismissible(
+                      key: Key(log.date),
+                      direction: DismissDirection.endToStart,
+                      background: Container(
+                        color: Colors.red,
+                        alignment: Alignment.centerRight,
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: const Icon(Icons.delete, color: Colors.white),
+                      ),
+                      onDismissed: (direction) {
+                        _controller.removeLog(index);
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Catatan dihapus')),
+                        );
+                      },
+                      child: LogItemWidget(
+                        log: log,
+                        onEdit: () => _showEditLogDialog(index, log),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
           );
         },
       ),
