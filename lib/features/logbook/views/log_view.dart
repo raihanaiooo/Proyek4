@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import '../models/log_model.dart';
 import '../controller/log_controller.dart';
-import '../../onboarding/onboarding_view.dart';
 import '../widgets/log_item_widget.dart';
+import '../widgets/add_log_dialog.dart';
+import '../widgets/edit_log_dialog.dart';
+import '../widgets/logout_dialog.dart';
 
 class LogView extends StatefulWidget {
   final String username;
@@ -14,8 +16,6 @@ class LogView extends StatefulWidget {
 
 class _LogViewState extends State<LogView> {
   final LogController _controller = LogController();
-  final TextEditingController _titleController = TextEditingController();
-  final TextEditingController _descController = TextEditingController();
 
   @override
   void initState() {
@@ -23,80 +23,18 @@ class _LogViewState extends State<LogView> {
     _controller.init(widget.username);
   }
 
-  void _showAddLogDialog() {
+  void _showAddDialog() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Tambah Catatan Baru"),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: _titleController,
-              decoration: const InputDecoration(hintText: "Judul Catatan"),
-            ),
-            TextField(
-              controller: _descController,
-              decoration: const InputDecoration(hintText: "Isi Catatan"),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Batal"),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              _controller.addLog(_titleController.text, _descController.text);
-
-              // setState(() {});
-
-              _titleController.clear();
-              _descController.clear();
-              Navigator.pop(context);
-            },
-            child: const Text("Simpan"),
-          ),
-        ],
-      ),
+      builder: (context) => AddLogDialog(controller: _controller),
     );
   }
 
-  void _showEditLogDialog(int index, LogModel log) {
-    _titleController.text = log.title;
-    _descController.text = log.desc;
+  void _showEditDialog(int index, LogModel log) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Edit Catatan"),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(controller: _titleController),
-            TextField(controller: _descController),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Batal"),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              _controller.updateLog(
-                index,
-                _titleController.text,
-                _descController.text,
-              );
-              _titleController.clear();
-              _descController.clear();
-              Navigator.pop(context);
-            },
-            child: const Text("Update"),
-          ),
-        ],
-      ),
+      builder: (context) =>
+          EditLogDialog(controller: _controller, log: log, index: index),
     );
   }
 
@@ -111,35 +49,7 @@ class _LogViewState extends State<LogView> {
             onPressed: () {
               showDialog(
                 context: context,
-                builder: (BuildContext context) {
-                  return AlertDialog(
-                    title: const Text(
-                      "Apakah Anda yakin? Data yang belum disimpan mungkin akan hilang.",
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text("Batal"),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                          Navigator.pushAndRemoveUntil(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const OnboardingView(),
-                            ),
-                            (route) => false,
-                          );
-                        },
-                        child: const Text(
-                          "Ya, Keluar",
-                          style: TextStyle(color: Colors.red),
-                        ),
-                      ),
-                    ],
-                  );
-                },
+                builder: (context) => const LogoutDialog(),
               );
             },
           ),
@@ -148,9 +58,6 @@ class _LogViewState extends State<LogView> {
       body: ValueListenableBuilder<List<LogModel>>(
         valueListenable: _controller.filteredLogs,
         builder: (context, currentLogs, child) {
-          if (currentLogs.isEmpty) {
-            return const Center(child: Text('Belum ada catatan.'));
-          }
           return Column(
             children: [
               Padding(
@@ -165,41 +72,49 @@ class _LogViewState extends State<LogView> {
                 ),
               ),
               Expanded(
-                child: ListView.builder(
-                  itemCount: currentLogs.length,
-                  itemBuilder: (context, index) {
-                    final log = currentLogs[index];
+                child: currentLogs.isEmpty
+                    ? const Center(child: Text('Belum ada catatan.'))
+                    : ListView.builder(
+                        itemCount: currentLogs.length,
+                        itemBuilder: (context, index) {
+                          final log = currentLogs[index];
+                          return Dismissible(
+                            key: Key(log.date),
+                            direction: DismissDirection.endToStart,
+                            background: Container(
+                              color: Colors.red,
+                              alignment: Alignment.centerRight,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                              ),
+                              child: const Icon(
+                                Icons.delete,
+                                color: Colors.white,
+                              ),
+                            ),
+                            onDismissed: (_) {
+                              _controller.removeLog(index);
 
-                    return Dismissible(
-                      key: Key(log.date),
-                      direction: DismissDirection.endToStart,
-                      background: Container(
-                        color: Colors.red,
-                        alignment: Alignment.centerRight,
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: const Icon(Icons.delete, color: Colors.white),
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Catatan dihapus'),
+                                ),
+                              );
+                            },
+                            child: LogItemWidget(
+                              log: log,
+                              onEdit: () => _showEditDialog(index, log),
+                            ),
+                          );
+                        },
                       ),
-                      onDismissed: (direction) {
-                        _controller.removeLog(index);
-
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Catatan dihapus')),
-                        );
-                      },
-                      child: LogItemWidget(
-                        log: log,
-                        onEdit: () => _showEditLogDialog(index, log),
-                      ),
-                    );
-                  },
-                ),
               ),
             ],
           );
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _showAddLogDialog,
+        onPressed: _showAddDialog,
         child: const Icon(Icons.add),
       ),
     );

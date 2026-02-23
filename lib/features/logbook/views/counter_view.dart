@@ -103,7 +103,6 @@ class _CounterViewState extends State<CounterView> {
               "History Step:",
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
-
             const SizedBox(height: 10),
             Expanded(
               child: ListView.builder(

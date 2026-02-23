@@ -11,12 +11,12 @@ class LogController {
 
   Future<void> init(String username) async {
     _username = username;
-    await loadFromDisk();
+    await loadLogs();
   }
 
-  LogController() {
-    loadFromDisk();
-  }
+  // LogController() {
+  //   loadFromDisk();
+  // }
 
   void searchLog(String query) {
     if (query.isEmpty) {
@@ -28,23 +28,37 @@ class LogController {
     }
   }
 
-  void addLog(String title, String desc) {
+  Future<void> loadLogs() async {
+    final prefs = await SharedPreferences.getInstance();
+    String? rawJson = prefs.getString(_storageKey);
+
+    if (rawJson != null) {
+      Iterable decoded = jsonDecode(rawJson);
+      logsNotifier.value = decoded.map((e) => LogModel.fromMap(e)).toList();
+    }
+
+    filteredLogs.value = logsNotifier.value;
+  }
+
+  void addLog(String title, String desc, String category) {
     final newLog = LogModel(
       title: title,
       desc: desc,
       date: DateTime.now().toString(),
+      category: category,
     );
     logsNotifier.value = [...logsNotifier.value, newLog];
     filteredLogs.value = logsNotifier.value;
     saveToDisk();
   }
 
-  void updateLog(int index, String title, String desc) {
+  void updateLog(int index, String title, String desc, String category) {
     final currentLogs = List<LogModel>.from(logsNotifier.value);
     currentLogs[index] = LogModel(
       title: title,
       desc: desc,
       date: DateTime.now().toString(),
+      category: category,
     );
     logsNotifier.value = currentLogs;
     filteredLogs.value = logsNotifier.value;
@@ -67,13 +81,13 @@ class LogController {
     await prefs.setString(_storageKey, encodedData);
   }
 
-  Future<void> loadFromDisk() async {
-    final prefs = await SharedPreferences.getInstance();
-    final String? data = prefs.getString(_storageKey);
-    if (data != null) {
-      final List decoded = jsonDecode(data);
-      logsNotifier.value = decoded.map((e) => LogModel.fromMap(e)).toList();
-    }
-    filteredLogs.value = logsNotifier.value;
-  }
+  // Future<void> loadFromDisk() async {
+  //   final prefs = await SharedPreferences.getInstance();
+  //   final String? data = prefs.getString(_storageKey);
+  //   if (data != null) {
+  //     final List decoded = jsonDecode(data);
+  //     logsNotifier.value = decoded.map((e) => LogModel.fromMap(e)).toList();
+  //   }
+  //   filteredLogs.value = logsNotifier.value;
+  // }
 }

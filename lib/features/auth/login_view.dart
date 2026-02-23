@@ -17,7 +17,7 @@ class _LoginViewState extends State<LoginView> {
   final TextEditingController _userController = TextEditingController();
   final TextEditingController _passController = TextEditingController();
 
-  void _handleLogin() {
+  void _handleLogin() async {
     String user = _userController.text;
     String pass = _passController.text;
 
@@ -33,14 +33,16 @@ class _LoginViewState extends State<LoginView> {
     bool isSuccess = _controller.login(user, pass);
 
     if (isSuccess) {
+      await _controller.saveCurrentUser(user);
+
       _attempts = 0;
+
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => LogView(username: user)),
       );
     } else {
       _attempts++;
-
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("Login Gagal! Username atau Password salah"),
