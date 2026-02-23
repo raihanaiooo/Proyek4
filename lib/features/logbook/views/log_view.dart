@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'models/log_model.dart';
-import 'log_controller.dart';
-import '../onboarding/onboarding_view.dart';
+import '../models/log_model.dart';
+import '../controller/log_controller.dart';
+import '../../onboarding/onboarding_view.dart';
 
 class LogView extends StatefulWidget {
   final String username;
