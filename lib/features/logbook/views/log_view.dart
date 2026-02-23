@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/log_model.dart';
 import '../controller/log_controller.dart';
 import '../../onboarding/onboarding_view.dart';
+import '../widgets/log_item_widget.dart';
 
 class LogView extends StatefulWidget {
   final String username;
@@ -154,25 +155,10 @@ class _LogViewState extends State<LogView> {
             itemCount: currentLogs.length,
             itemBuilder: (context, index) {
               final log = currentLogs[index];
-              return Card(
-                child: ListTile(
-                  leading: const Icon(Icons.note),
-                  title: Text(log.title),
-                  subtitle: Text(log.desc),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.edit, color: Colors.blue),
-                        onPressed: () => _showEditLogDialog(index, log),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () => _controller.removeLog(index),
-                      ),
-                    ],
-                  ),
-                ),
+              return LogItemWidget(
+                log: log,
+                onEdit: () => _showEditLogDialog(index, log),
+                onDelete: () => _controller.removeLog(index),
               );
             },
           );
