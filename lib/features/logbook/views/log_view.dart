@@ -73,7 +73,16 @@ class _LogViewState extends State<LogView> {
               ),
               Expanded(
                 child: currentLogs.isEmpty
-                    ? const Center(child: Text('Belum ada catatan.'))
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Image.asset('assets/empty.gif', height: 120),
+                            const SizedBox(height: 12),
+                            const Text('Belum ada catatan.'),
+                          ],
+                        ),
+                      )
                     : ListView.builder(
                         itemCount: currentLogs.length,
                         itemBuilder: (context, index) {
