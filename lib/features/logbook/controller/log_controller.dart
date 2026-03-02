@@ -16,7 +16,7 @@ class LogController {
   }
 
   Future<List<LogModel>> getLogs() async {
-    return await MongoService().getLogs();
+    return await MongoService().getLogsByUser(_username);
   }
 
   // LogController() {
@@ -39,6 +39,7 @@ class LogController {
       desc: desc,
       date: DateTime.now().toString(),
       category: category,
+      username: _username,
     );
     await MongoService().insertLog(newLog);
     logsNotifier.value = [...logsNotifier.value, newLog];
@@ -59,6 +60,7 @@ class LogController {
       desc: desc,
       date: DateTime.now().toString(),
       category: category,
+      username: _username,
     );
 
     await MongoService().updateLog(updatedLog);

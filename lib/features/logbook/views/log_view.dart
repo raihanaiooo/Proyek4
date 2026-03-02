@@ -17,6 +17,7 @@ class LogView extends StatefulWidget {
 }
 
 class _LogViewState extends State<LogView> {
+  bool _isDeleting = false;
   bool _isLoading = false;
   late Future<List<LogModel>> _logsFuture;
   final LogController _controller = LogController();
@@ -31,7 +32,7 @@ class _LogViewState extends State<LogView> {
 
   Future<List<LogModel>> _fetchLogs() async {
     await MongoService().connect();
-    return MongoService().getLogs();
+    return _controller.getLogs();
   }
 
   void _refreshLogs() {
@@ -86,7 +87,7 @@ class _LogViewState extends State<LogView> {
     }
   }
 
-  void _showAddDialog() async {
+  Future<void> _showAddDialog() async {
     await showDialog(
       context: context,
       builder: (context) => AddLogDialog(controller: _controller),
@@ -95,14 +96,39 @@ class _LogViewState extends State<LogView> {
     _refreshLogs();
   }
 
-  void _showEditDialog(int index, LogModel log) {
-    showDialog(
+  Future<void> _showEditDialog(int index, LogModel log) async {
+    await showDialog(
       context: context,
       builder: (context) =>
           EditLogDialog(controller: _controller, log: log, index: index),
     );
 
     _refreshLogs();
+  }
+
+  Future<void> _deleteLog(LogModel log) async {
+    setState(() => _isDeleting = true);
+
+    try {
+      await MongoService().deleteLog(log.id!);
+      _refreshLogs();
+
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Catatan dihapus')));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Gagal hapus: $e')));
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isDeleting = false);
+      }
+    }
   }
 
   @override
@@ -168,32 +194,53 @@ class _LogViewState extends State<LogView> {
                 ),
               ),
               Expanded(
-                child: ListView.builder(
-                  itemCount: currentLogs.length,
-                  itemBuilder: (context, index) {
-                    final log = currentLogs[index];
-                    return Dismissible(
-                      key: Key(log.date),
-                      direction: DismissDirection.endToStart,
-                      background: Container(
-                        color: Colors.red,
-                        alignment: Alignment.centerRight,
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: const Icon(Icons.delete, color: Colors.white),
-                      ),
-                      onDismissed: (_) async {
-                        await MongoService().deleteLog(log.id!);
-                        _refreshLogs();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Catatan dihapus')),
+                child: Stack(
+                  children: [
+                    ListView.builder(
+                      itemCount: currentLogs.length,
+                      itemBuilder: (context, index) {
+                        final log = currentLogs[index];
+                        return Dismissible(
+                          key: ValueKey(log.id?.toString() ?? log.date),
+                          direction: DismissDirection.endToStart,
+                          background: Container(
+                            color: Colors.red,
+                            alignment: Alignment.centerRight,
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: const Icon(
+                              Icons.delete,
+                              color: Colors.white,
+                            ),
+                          ),
+                          confirmDismiss: (_) async {
+                            await _deleteLog(log);
+                            return true;
+                          },
+                          child: LogItemWidget(
+                            log: log,
+                            onEdit: () => _showEditDialog(index, log),
+                          ),
                         );
                       },
-                      child: LogItemWidget(
-                        log: log,
-                        onEdit: () => _showEditDialog(index, log),
+                    ),
+                    if (_isDeleting)
+                      Container(
+                        color: Colors.black54,
+                        child: const Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              CircularProgressIndicator(),
+                              SizedBox(height: 12),
+                              Text(
+                                "Data sedang dihapus...",
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                    );
-                  },
+                  ],
                 ),
               ),
             ],
