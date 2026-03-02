@@ -40,10 +40,10 @@ class LogController {
       date: DateTime.now().toString(),
       category: category,
     );
+    await MongoService().insertLog(newLog);
     logsNotifier.value = [...logsNotifier.value, newLog];
     filteredLogs.value = logsNotifier.value;
     // saveToDisk();
-    await MongoService().insertLog(newLog);
   }
 
   Future<void> updateLog(

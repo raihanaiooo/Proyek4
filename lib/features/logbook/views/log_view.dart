@@ -101,6 +101,8 @@ class _LogViewState extends State<LogView> {
       builder: (context) =>
           EditLogDialog(controller: _controller, log: log, index: index),
     );
+
+    _refreshLogs();
   }
 
   @override
@@ -121,7 +123,7 @@ class _LogViewState extends State<LogView> {
         ],
       ),
       body: FutureBuilder<List<LogModel>>(
-        future: MongoService().getLogs(),
+        future: _logsFuture,
         builder: (context, snapshot) {
           if (_isLoading) {
             return const Center(
