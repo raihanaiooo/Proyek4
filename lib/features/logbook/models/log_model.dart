@@ -15,15 +15,6 @@ class LogModel {
     required this.category,
   });
 
-  factory LogModel.fromMap(Map<String, dynamic> map) {
-    return LogModel(
-      title: map['title'] ?? '',
-      date: map['date'] ?? '',
-      desc: map['desc'] ?? '',
-      category: map['category'] ?? '',
-    );
-  }
-
   Map<String, dynamic> toMap() {
     return {
       '_id': id ?? ObjectId(),
@@ -32,5 +23,15 @@ class LogModel {
       'desc': desc,
       'category': category,
     };
+  }
+
+  factory LogModel.fromMap(Map<String, dynamic> map) {
+    return LogModel(
+      id: map['_id'] as ObjectId?,
+      title: map['title'] ?? '',
+      date: map['date'] ?? '',
+      desc: map['desc'] ?? '',
+      category: map['category'] ?? '',
+    );
   }
 }

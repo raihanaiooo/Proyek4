@@ -11,7 +11,8 @@ class LogController {
 
   Future<void> init(String username) async {
     _username = username;
-    await loadLogs();
+    // await loadLogs();
+    await loadFromDisk();
   }
 
   // LogController() {
@@ -26,18 +27,6 @@ class LogController {
           .where((log) => log.title.toLowerCase().contains(query.toLowerCase()))
           .toList();
     }
-  }
-
-  Future<void> loadLogs() async {
-    final prefs = await SharedPreferences.getInstance();
-    String? rawJson = prefs.getString(_storageKey);
-
-    if (rawJson != null) {
-      Iterable decoded = jsonDecode(rawJson);
-      logsNotifier.value = decoded.map((e) => LogModel.fromMap(e)).toList();
-    }
-
-    filteredLogs.value = logsNotifier.value;
   }
 
   void addLog(String title, String desc, String category) {
@@ -81,13 +70,19 @@ class LogController {
     await prefs.setString(_storageKey, encodedData);
   }
 
-  // Future<void> loadFromDisk() async {
-  //   final prefs = await SharedPreferences.getInstance();
-  //   final String? data = prefs.getString(_storageKey);
-  //   if (data != null) {
-  //     final List decoded = jsonDecode(data);
-  //     logsNotifier.value = decoded.map((e) => LogModel.fromMap(e)).toList();
-  //   }
-  //   filteredLogs.value = logsNotifier.value;
-  // }
+  Future<void> loadFromDisk() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? rawJson = prefs.getString(_storageKey);
+
+    if (rawJson != null) {
+      logsNotifier.value = _mapJsonToLogs(rawJson);
+    }
+
+    filteredLogs.value = logsNotifier.value;
+  }
+
+  List<LogModel> _mapJsonToLogs(String rawJson) {
+    final Iterable decoded = jsonDecode(rawJson);
+    return decoded.map((e) => LogModel.fromMap(e)).toList();
+  }
 }
