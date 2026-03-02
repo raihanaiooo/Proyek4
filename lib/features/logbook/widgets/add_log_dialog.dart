@@ -101,8 +101,8 @@ class _AddLogDialogState extends State<AddLogDialog> {
               borderRadius: BorderRadius.circular(12),
             ),
           ),
-          onPressed: () {
-            widget.controller.addLog(
+          onPressed: () async {
+            await widget.controller.addLog(
               _titleController.text,
               _descController.text,
               _selectedCategory,

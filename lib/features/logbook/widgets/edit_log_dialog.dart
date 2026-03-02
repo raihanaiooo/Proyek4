@@ -118,9 +118,9 @@ class _EditLogDialogState extends State<EditLogDialog> {
               borderRadius: BorderRadius.circular(12),
             ),
           ),
-          onPressed: () {
-            widget.controller.updateLog(
-              widget.index,
+          onPressed: () async {
+            await widget.controller.updateLog(
+              widget.log,
               _titleController.text,
               _descController.text,
               _selectedCategory,

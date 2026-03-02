@@ -18,14 +18,26 @@ class LogView extends StatefulWidget {
 
 class _LogViewState extends State<LogView> {
   bool _isLoading = false;
+  late Future<List<LogModel>> _logsFuture;
   final LogController _controller = LogController();
 
   @override
   void initState() {
     super.initState();
     _controller.init(widget.username);
-
+    _logsFuture = _fetchLogs();
     Future.microtask(() => _initDatabase());
+  }
+
+  Future<List<LogModel>> _fetchLogs() async {
+    await MongoService().connect();
+    return MongoService().getLogs();
+  }
+
+  void _refreshLogs() {
+    setState(() {
+      _logsFuture = _fetchLogs();
+    });
   }
 
   Future<void> _initDatabase() async {
@@ -49,7 +61,7 @@ class _LogViewState extends State<LogView> {
         source: "log_view.dart",
       );
 
-      await _controller.loadFromDisk();
+      // await _controller.loadFromDisk();
 
       await LogHelper.writeLog(
         "UI: Data berhasil dimuat ke Notifier.",
@@ -74,11 +86,13 @@ class _LogViewState extends State<LogView> {
     }
   }
 
-  void _showAddDialog() {
-    showDialog(
+  void _showAddDialog() async {
+    await showDialog(
       context: context,
       builder: (context) => AddLogDialog(controller: _controller),
     );
+
+    _refreshLogs();
   }
 
   void _showEditDialog(int index, LogModel log) {
@@ -106,9 +120,9 @@ class _LogViewState extends State<LogView> {
           ),
         ],
       ),
-      body: ValueListenableBuilder<List<LogModel>>(
-        valueListenable: _controller.filteredLogs,
-        builder: (context, currentLogs, child) {
+      body: FutureBuilder<List<LogModel>>(
+        future: MongoService().getLogs(),
+        builder: (context, snapshot) {
           if (_isLoading) {
             return const Center(
               child: Column(
@@ -121,6 +135,7 @@ class _LogViewState extends State<LogView> {
               ),
             );
           }
+          final currentLogs = snapshot.data ?? [];
           if (currentLogs.isEmpty) {
             return Center(
               child: Column(
@@ -164,8 +179,9 @@ class _LogViewState extends State<LogView> {
                         padding: const EdgeInsets.symmetric(horizontal: 20),
                         child: const Icon(Icons.delete, color: Colors.white),
                       ),
-                      onDismissed: (_) {
-                        _controller.removeLog(index);
+                      onDismissed: (_) async {
+                        await MongoService().deleteLog(log.id!);
+                        _refreshLogs();
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Catatan dihapus')),
                         );

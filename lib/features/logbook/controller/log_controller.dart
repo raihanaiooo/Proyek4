@@ -1,6 +1,6 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:logbook_app_01/services/mongo_service.dart';
+// import 'package:shared_preferences/shared_preferences.dart';
 import '../models/log_model.dart';
 
 class LogController {
@@ -12,7 +12,11 @@ class LogController {
   Future<void> init(String username) async {
     _username = username;
     // await loadLogs();
-    await loadFromDisk();
+    // await loadFromDisk();
+  }
+
+  Future<List<LogModel>> getLogs() async {
+    return await MongoService().getLogs();
   }
 
   // LogController() {
@@ -29,7 +33,7 @@ class LogController {
     }
   }
 
-  void addLog(String title, String desc, String category) {
+  Future<void> addLog(String title, String desc, String category) async {
     final newLog = LogModel(
       title: title,
       desc: desc,
@@ -38,51 +42,70 @@ class LogController {
     );
     logsNotifier.value = [...logsNotifier.value, newLog];
     filteredLogs.value = logsNotifier.value;
-    saveToDisk();
+    // saveToDisk();
+    await MongoService().insertLog(newLog);
   }
 
-  void updateLog(int index, String title, String desc, String category) {
-    final currentLogs = List<LogModel>.from(logsNotifier.value);
-    currentLogs[index] = LogModel(
+  Future<void> updateLog(
+    LogModel log,
+    // int index,
+    String title,
+    String desc,
+    String category,
+  ) async {
+    final updatedLog = LogModel(
+      id: log.id,
       title: title,
       desc: desc,
       date: DateTime.now().toString(),
       category: category,
     );
-    logsNotifier.value = currentLogs;
-    filteredLogs.value = logsNotifier.value;
-    saveToDisk();
+
+    await MongoService().updateLog(updatedLog);
+    // final currentLogs = List<LogModel>.from(logsNotifier.value);
+    // currentLogs[index] = LogModel(
+    //   title: title,
+    //   desc: desc,
+    //   date: DateTime.now().toString(),
+    //   category: category,
+    // );
+    // logsNotifier.value = currentLogs;
+    // filteredLogs.value = logsNotifier.value;
+    // saveToDisk();
   }
 
-  void removeLog(int index) {
-    final currentLogs = List<LogModel>.from(logsNotifier.value);
-    currentLogs.removeAt(index);
-    logsNotifier.value = currentLogs;
-    filteredLogs.value = logsNotifier.value;
-    saveToDisk();
-  }
-
-  Future<void> saveToDisk() async {
-    final prefs = await SharedPreferences.getInstance();
-    final String encodedData = jsonEncode(
-      logsNotifier.value.map((e) => e.toMap()).toList(),
-    );
-    await prefs.setString(_storageKey, encodedData);
-  }
-
-  Future<void> loadFromDisk() async {
-    final prefs = await SharedPreferences.getInstance();
-    final String? rawJson = prefs.getString(_storageKey);
-
-    if (rawJson != null) {
-      logsNotifier.value = _mapJsonToLogs(rawJson);
+  Future<void> removeLog(LogModel log) async {
+    if (log.id != null) {
+      await MongoService().deleteLog(log.id!);
     }
-
-    filteredLogs.value = logsNotifier.value;
+    // final currentLogs = List<LogModel>.from(logsNotifier.value);
+    // currentLogs.removeAt(index);
+    // logsNotifier.value = currentLogs;
+    // filteredLogs.value = logsNotifier.value;
+    // saveToDisk();
   }
 
-  List<LogModel> _mapJsonToLogs(String rawJson) {
-    final Iterable decoded = jsonDecode(rawJson);
-    return decoded.map((e) => LogModel.fromMap(e)).toList();
-  }
+  // Future<void> saveToDisk() async {
+  //   final prefs = await SharedPreferences.getInstance();
+  //   final String encodedData = jsonEncode(
+  //     logsNotifier.value.map((e) => e.toMap()).toList(),
+  //   );
+  //   await prefs.setString(_storageKey, encodedData);
+  // }
+
+  // Future<void> loadFromDisk() async {
+  //   final prefs = await SharedPreferences.getInstance();
+  //   final String? rawJson = prefs.getString(_storageKey);
+
+  //   if (rawJson != null) {
+  //     logsNotifier.value = _mapJsonToLogs(rawJson);
+  //   }
+
+  //   filteredLogs.value = logsNotifier.value;
+  // }
+
+  // List<LogModel> _mapJsonToLogs(String rawJson) {
+  //   final Iterable decoded = jsonDecode(rawJson);
+  //   return decoded.map((e) => LogModel.fromMap(e)).toList();
+  // }
 }
