@@ -10,6 +10,13 @@ class LogHelper {
   }) async {
     final int configLevel = int.tryParse(dotenv.env['LOG_LEVEL'] ?? '2') ?? 2;
     final String muteList = dotenv.env['LOG_MUTE'] ?? '';
+    final mutedSources = muteList
+        .split(',')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
+
+    if (mutedSources.contains(source)) return;
 
     if (level > configLevel) return;
     if (muteList.split(',').contains(source)) return;
