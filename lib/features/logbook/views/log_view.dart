@@ -103,7 +103,6 @@ class _LogViewState extends State<LogView> {
                             ),
                             onDismissed: (_) {
                               _controller.removeLog(index);
-
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
                                   content: Text('Catatan dihapus'),

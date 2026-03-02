@@ -1,10 +1,14 @@
+import 'package:mongo_dart/mongo_dart.dart';
+
 class LogModel {
+  final ObjectId? id;
   final String title;
   final String date;
   final String desc;
   final String category;
 
   LogModel({
+    this.id,
     required this.title,
     required this.date,
     required this.desc,
@@ -21,6 +25,12 @@ class LogModel {
   }
 
   Map<String, dynamic> toMap() {
-    return {'title': title, 'date': date, 'desc': desc, 'category': category};
+    return {
+      '_id': id ?? ObjectId(),
+      'title': title,
+      'date': date,
+      'desc': desc,
+      'category': category,
+    };
   }
 }
