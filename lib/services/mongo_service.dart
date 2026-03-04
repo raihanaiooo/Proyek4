@@ -85,7 +85,8 @@ class MongoService {
         source: _source,
         level: 1,
       );
-      return [];
+      throw Exception("OFFLINE_MODE");
+      // return [];
     }
   }
 

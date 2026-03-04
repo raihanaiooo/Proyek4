@@ -4,8 +4,14 @@ import '../models/log_model.dart';
 class LogItemWidget extends StatelessWidget {
   final LogModel log;
   final VoidCallback onEdit;
+  final String formattedDate;
 
-  const LogItemWidget({super.key, required this.log, required this.onEdit});
+  const LogItemWidget({
+    super.key,
+    required this.log,
+    required this.onEdit,
+    required this.formattedDate,
+  });
 
   Color _getCategoryColor(String category) {
     switch (category) {
@@ -63,7 +69,7 @@ class LogItemWidget extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      log.date,
+                      formattedDate,
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey.shade500,

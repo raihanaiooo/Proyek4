@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:timeago/timeago.dart' as timeago;
+
 import '../models/log_model.dart';
 import '../controller/log_controller.dart';
 import '../widgets/log_item_widget.dart';
@@ -19,18 +23,47 @@ class LogView extends StatefulWidget {
 class _LogViewState extends State<LogView> {
   bool _isDeleting = false;
   bool _isLoading = false;
+  bool _isOffline = false;
+
   late Future<List<LogModel>> _logsFuture;
   final LogController _controller = LogController();
 
   @override
   void initState() {
     super.initState();
+    timeago.setLocaleMessages('id', timeago.IdMessages());
     _controller.init(widget.username);
     _logsFuture = _fetchLogs();
     Future.microtask(() => _initDatabase());
   }
 
+  // =============================
+  // CONNECTION GUARD
+  // =============================
+  Future<bool> _checkConnection() async {
+    final connectivityResult = await Connectivity().checkConnectivity();
+
+    if (connectivityResult == ConnectivityResult.none) {
+      setState(() => _isOffline = true);
+      return false;
+    }
+
+    setState(() => _isOffline = false);
+    return true;
+  }
+
   Future<List<LogModel>> _fetchLogs() async {
+    final hasInternet = await _checkConnection();
+
+    if (!hasInternet) {
+      await LogHelper.writeLog(
+        "Offline Mode Warning",
+        source: "log_view.dart",
+        level: 1,
+      );
+      throw Exception("Anda sedang offline.");
+    }
+
     await MongoService().connect();
     return _controller.getLogs();
   }
@@ -45,39 +78,17 @@ class _LogViewState extends State<LogView> {
     setState(() => _isLoading = true);
 
     try {
-      await LogHelper.writeLog(
-        "UI: Memulai inisialisasi database...",
-        source: "log_view.dart",
-      );
-
       await MongoService().connect().timeout(
         const Duration(seconds: 15),
-        onTimeout: () => throw Exception(
-          "Koneksi Cloud Timeout. Periksa sinyal/IP Whitelist.",
-        ),
-      );
-
-      await LogHelper.writeLog(
-        "UI: Koneksi MongoService BERHASIL.",
-        source: "log_view.dart",
-      );
-
-      // await _controller.loadFromDisk();
-
-      await LogHelper.writeLog(
-        "UI: Data berhasil dimuat ke Notifier.",
-        source: "log_view.dart",
+        onTimeout: () => throw Exception("Koneksi Cloud Timeout."),
       );
     } catch (e) {
-      await LogHelper.writeLog(
-        "UI: Error - $e",
-        source: "log_view.dart",
-        level: 1,
-      );
-
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Masalah: $e"), backgroundColor: Colors.red),
+          const SnackBar(
+            content: Text("Offline Mode Warning"),
+            backgroundColor: Colors.orange,
+          ),
         );
       }
     } finally {
@@ -92,7 +103,6 @@ class _LogViewState extends State<LogView> {
       context: context,
       builder: (context) => AddLogDialog(controller: _controller),
     );
-
     _refreshLogs();
   }
 
@@ -102,7 +112,6 @@ class _LogViewState extends State<LogView> {
       builder: (context) =>
           EditLogDialog(controller: _controller, log: log, index: index),
     );
-
     _refreshLogs();
   }
 
@@ -112,22 +121,28 @@ class _LogViewState extends State<LogView> {
     try {
       await MongoService().deleteLog(log.id!);
       _refreshLogs();
-
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Catatan dihapus')));
-      }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Gagal hapus: $e')));
-      }
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Gagal hapus: $e')));
     } finally {
       if (mounted) {
         setState(() => _isDeleting = false);
       }
+    }
+  }
+
+  // =============================
+  // TIMESTAMP FORMAT (INDONESIA)
+  // =============================
+  String _formatDate(DateTime date) {
+    final now = DateTime.now();
+    final difference = now.difference(date);
+
+    if (difference.inHours < 24) {
+      return timeago.format(date, locale: 'id');
+    } else {
+      return DateFormat('dd MMM yyyy', 'id_ID').format(date);
     }
   }
 
@@ -152,34 +167,34 @@ class _LogViewState extends State<LogView> {
         future: _logsFuture,
         builder: (context, snapshot) {
           if (_isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (_isOffline) {
             return const Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 16),
-                  Text("Menghubungkan ke MongoDB Atlas"),
-                ],
+              child: Text(
+                "Offline Mode Warning\nPeriksa koneksi internet Anda.",
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.orange),
               ),
             );
           }
-          final currentLogs = snapshot.data ?? [];
-          if (currentLogs.isEmpty) {
+
+          if (snapshot.hasError) {
             return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.cloud_off, size: 64, color: Colors.grey),
-                  const SizedBox(height: 16),
-                  const Text("Belum ada catatan di Cloud."),
-                  ElevatedButton(
-                    onPressed: _showAddDialog,
-                    child: const Text("Buat Catatan Pertama"),
-                  ),
-                ],
+              child: Text(
+                snapshot.error.toString(),
+                style: const TextStyle(color: Colors.red),
               ),
             );
           }
+
+          final currentLogs = snapshot.data ?? [];
+
+          if (currentLogs.isEmpty) {
+            return const Center(child: Text("Belum ada catatan di Cloud."));
+          }
+
           return Column(
             children: [
               Padding(
@@ -196,49 +211,51 @@ class _LogViewState extends State<LogView> {
               Expanded(
                 child: Stack(
                   children: [
-                    ListView.builder(
-                      itemCount: currentLogs.length,
-                      itemBuilder: (context, index) {
-                        final log = currentLogs[index];
-                        return Dismissible(
-                          key: ValueKey(log.id?.toString() ?? log.date),
-                          direction: DismissDirection.endToStart,
-                          background: Container(
-                            color: Colors.red,
-                            alignment: Alignment.centerRight,
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
-                            child: const Icon(
-                              Icons.delete,
-                              color: Colors.white,
-                            ),
-                          ),
-                          confirmDismiss: (_) async {
-                            await _deleteLog(log);
-                            return true;
-                          },
-                          child: LogItemWidget(
-                            log: log,
-                            onEdit: () => _showEditDialog(index, log),
-                          ),
-                        );
+                    RefreshIndicator(
+                      onRefresh: () async {
+                        _refreshLogs();
                       },
+                      child: ListView.builder(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        itemCount: currentLogs.length,
+                        itemBuilder: (context, index) {
+                          final log = currentLogs[index];
+
+                          return Dismissible(
+                            key: ValueKey(
+                              log.id?.toString() ?? log.date.toString(),
+                            ),
+                            direction: DismissDirection.endToStart,
+                            background: Container(
+                              color: Colors.red,
+                              alignment: Alignment.centerRight,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                              ),
+                              child: const Icon(
+                                Icons.delete,
+                                color: Colors.white,
+                              ),
+                            ),
+                            confirmDismiss: (_) async {
+                              await _deleteLog(log);
+                              return true;
+                            },
+                            child: LogItemWidget(
+                              log: log,
+                              formattedDate: _formatDate(
+                                DateTime.parse(log.date),
+                              ),
+                              onEdit: () => _showEditDialog(index, log),
+                            ),
+                          );
+                        },
+                      ),
                     ),
                     if (_isDeleting)
                       Container(
                         color: Colors.black54,
-                        child: const Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              CircularProgressIndicator(),
-                              SizedBox(height: 12),
-                              Text(
-                                "Data sedang dihapus...",
-                                style: TextStyle(color: Colors.white),
-                              ),
-                            ],
-                          ),
-                        ),
+                        child: const Center(child: CircularProgressIndicator()),
                       ),
                   ],
                 ),
