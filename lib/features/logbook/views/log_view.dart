@@ -11,10 +11,18 @@ import '../widgets/edit_log_dialog.dart';
 import '../widgets/logout_dialog.dart';
 import 'package:logbook_app_01/helpers/log_helper.dart';
 import 'package:logbook_app_01/services/mongo_service.dart';
+import 'package:logbook_app_01/services/access_control_service.dart';
 
 class LogView extends StatefulWidget {
   final String username;
-  const LogView({super.key, required this.username});
+  final String currentUserId;
+  final String currentUserRole;
+  const LogView({
+    super.key,
+    required this.username,
+    required this.currentUserId,
+    required this.currentUserRole,
+  });
 
   @override
   State<LogView> createState() => _LogViewState();
@@ -221,34 +229,58 @@ class _LogViewState extends State<LogView> {
                         itemBuilder: (context, index) {
                           final log = currentLogs[index];
 
-                          return Dismissible(
-                            key: ValueKey(
-                              log.id?.toString() ?? log.date.toString(),
-                            ),
-                            direction: DismissDirection.endToStart,
-                            background: Container(
-                              color: Colors.red,
-                              alignment: Alignment.centerRight,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                              ),
-                              child: const Icon(
-                                Icons.delete,
-                                color: Colors.white,
-                              ),
-                            ),
-                            confirmDismiss: (_) async {
-                              await _deleteLog(log);
-                              return true;
-                            },
-                            child: LogItemWidget(
-                              log: log,
-                              formattedDate: _formatDate(
-                                DateTime.parse(log.date),
-                              ),
-                              onEdit: () => _showEditDialog(index, log),
-                            ),
+                          final canDelete = AccessControlService.canPerform(
+                            widget.currentUserRole,
+                            AccessControlService.actionDelete,
+                            isOwner: log.authorId == widget.currentUserId,
                           );
+
+                          final canEdit = AccessControlService.canPerform(
+                            widget.currentUserRole,
+                            AccessControlService.actionUpdate,
+                            isOwner: log.authorId == widget.currentUserId,
+                          );
+
+                          return canDelete
+                              ? Dismissible(
+                                  key: ValueKey(
+                                    log.id?.toString() ?? log.date.toString(),
+                                  ),
+                                  direction: DismissDirection.endToStart,
+                                  background: Container(
+                                    color: Colors.red,
+                                    alignment: Alignment.centerRight,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 20,
+                                    ),
+                                    child: const Icon(
+                                      Icons.delete,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  confirmDismiss: (_) async {
+                                    await _deleteLog(log);
+                                    return true;
+                                  },
+                                  child: LogItemWidget(
+                                    log: log,
+                                    formattedDate: _formatDate(
+                                      DateTime.parse(log.date),
+                                    ),
+                                    onEdit: canEdit
+                                        ? () => _showEditDialog(index, log)
+                                        : null,
+                                  ),
+                                )
+                              : LogItemWidget(
+                                  log: log,
+                                  formattedDate: _formatDate(
+                                    DateTime.parse(log.date),
+                                  ),
+                                  onEdit: canEdit
+                                      ? () => _showEditDialog(index, log)
+                                      : null,
+                                );
                         },
                       ),
                     ),

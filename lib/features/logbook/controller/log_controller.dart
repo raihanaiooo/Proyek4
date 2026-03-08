@@ -40,6 +40,9 @@ class LogController {
       date: DateTime.now().toString(),
       category: category,
       username: _username,
+      authorId:
+          _username, // Assuming username is unique and can serve as authorId
+      teamId: 'default_team', // Placeholder teamId, adjust as needed
     );
     await MongoService().insertLog(newLog);
     logsNotifier.value = [...logsNotifier.value, newLog];
@@ -61,6 +64,8 @@ class LogController {
       date: DateTime.now().toString(),
       category: category,
       username: _username,
+      authorId: log.authorId,
+      teamId: log.teamId,
     );
 
     await MongoService().updateLog(updatedLog);

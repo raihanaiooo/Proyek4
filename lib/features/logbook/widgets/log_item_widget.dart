@@ -3,7 +3,7 @@ import '../models/log_model.dart';
 
 class LogItemWidget extends StatelessWidget {
   final LogModel log;
-  final VoidCallback onEdit;
+  final VoidCallback? onEdit;
   final String formattedDate;
 
   const LogItemWidget({
