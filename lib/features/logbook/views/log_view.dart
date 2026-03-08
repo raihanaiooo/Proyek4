@@ -42,6 +42,11 @@ class _LogViewState extends State<LogView> {
     timeago.setLocaleMessages('id', timeago.IdMessages());
     _controller.init(widget.username);
     _logsFuture = _fetchLogs();
+    _controller.setCurrentUser(
+      userId: widget.currentUserId,
+      role: widget.currentUserRole,
+    );
+
     Future.microtask(() => _initDatabase());
   }
 

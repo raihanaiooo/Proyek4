@@ -2,17 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:logbook_app_01/services/mongo_service.dart';
 // import 'package:shared_preferences/shared_preferences.dart';
 import '../models/log_model.dart';
+import 'package:logbook_app_01/services/access_control_service.dart';
 
 class LogController {
   final ValueNotifier<List<LogModel>> logsNotifier = ValueNotifier([]);
   ValueNotifier<List<LogModel>> filteredLogs = ValueNotifier([]);
   String _username = "User";
-  String get _storageKey => "user_logs_data_$_username";
+  late String _currentUserId;
+  late String _currentUserRole;
+
+  // String get _storageKey => "user_logs_data_$_username";
 
   Future<void> init(String username) async {
     _username = username;
     // await loadLogs();
     // await loadFromDisk();
+  }
+
+  void setCurrentUser({required String userId, required String role}) {
+    _currentUserId = userId;
+    _currentUserRole = role;
   }
 
   Future<List<LogModel>> getLogs() async {
@@ -82,6 +91,19 @@ class LogController {
   }
 
   Future<void> removeLog(LogModel log) async {
+    final isOwner = log.authorId == _currentUserId;
+
+    final canDelete = AccessControlService.canPerform(
+      _currentUserRole,
+      AccessControlService.actionDelete,
+      isOwner: isOwner,
+    );
+
+    if (!canDelete) {
+      throw Exception(
+        "Akses ditolak: Anda tidak memiliki izin menghapus log ini.",
+      );
+    }
     if (log.id != null) {
       await MongoService().deleteLog(log.id!);
     }
