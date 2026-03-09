@@ -6,12 +6,13 @@ import 'package:timeago/timeago.dart' as timeago;
 import '../models/log_model.dart';
 import '../controller/log_controller.dart';
 import '../widgets/log_item_widget.dart';
-import '../widgets/add_log_dialog.dart';
-import '../widgets/edit_log_dialog.dart';
+// import '../widgets/add_log_dialog.dart';
+// import '../widgets/edit_log_dialog.dart';
 import '../widgets/logout_dialog.dart';
 import 'package:logbook_app_01/helpers/log_helper.dart';
 import 'package:logbook_app_01/services/mongo_service.dart';
 import 'package:logbook_app_01/services/access_control_service.dart';
+import 'package:logbook_app_01/features/logbook/log_editor_page.dart';
 
 class LogView extends StatefulWidget {
   final String username;
@@ -50,9 +51,7 @@ class _LogViewState extends State<LogView> {
     Future.microtask(() => _initDatabase());
   }
 
-  // =============================
   // CONNECTION GUARD
-  // =============================
   Future<bool> _checkConnection() async {
     final connectivityResult = await Connectivity().checkConnectivity();
 
@@ -111,22 +110,40 @@ class _LogViewState extends State<LogView> {
     }
   }
 
-  Future<void> _showAddDialog() async {
-    await showDialog(
-      context: context,
-      builder: (context) => AddLogDialog(controller: _controller),
+  Future<void> _openAddPage() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => LogEditorPage(controller: _controller)),
     );
     _refreshLogs();
   }
 
-  Future<void> _showEditDialog(int index, LogModel log) async {
-    await showDialog(
-      context: context,
-      builder: (context) =>
-          EditLogDialog(controller: _controller, log: log, index: index),
+  Future<void> _openEditPage(LogModel log) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => LogEditorPage(log: log, controller: _controller),
+      ),
     );
     _refreshLogs();
   }
+
+  // Future<void> _showAddDialog() async {
+  //   await showDialog(
+  //     context: context,
+  //     builder: (context) => AddLogDialog(controller: _controller),
+  //   );
+  //   _refreshLogs();
+  // }
+
+  // Future<void> _showEditDialog(int index, LogModel log) async {
+  //   await showDialog(
+  //     context: context,
+  //     builder: (context) =>
+  //         EditLogDialog(controller: _controller, log: log, index: index),
+  //   );
+  //   _refreshLogs();
+  // }
 
   Future<void> _deleteLog(LogModel log) async {
     setState(() => _isDeleting = true);
@@ -145,9 +162,6 @@ class _LogViewState extends State<LogView> {
     }
   }
 
-  // =============================
-  // TIMESTAMP FORMAT (INDONESIA)
-  // =============================
   String _formatDate(DateTime date) {
     final now = DateTime.now();
     final difference = now.difference(date);
@@ -273,7 +287,7 @@ class _LogViewState extends State<LogView> {
                                       DateTime.parse(log.date),
                                     ),
                                     onEdit: canEdit
-                                        ? () => _showEditDialog(index, log)
+                                        ? () => _openEditPage(log)
                                         : null,
                                   ),
                                 )
@@ -283,7 +297,7 @@ class _LogViewState extends State<LogView> {
                                     DateTime.parse(log.date),
                                   ),
                                   onEdit: canEdit
-                                      ? () => _showEditDialog(index, log)
+                                      ? () => _openEditPage(log)
                                       : null,
                                 );
                         },
@@ -302,7 +316,7 @@ class _LogViewState extends State<LogView> {
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _showAddDialog,
+        onPressed: _openAddPage,
         child: const Icon(Icons.add),
       ),
     );
