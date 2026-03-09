@@ -5,7 +5,7 @@ part 'log_model.g.dart';
 @HiveType(typeId: 0)
 class LogModel {
   @HiveField(0)
-  final ObjectId? id;
+  final String? id;
 
   @HiveField(1)
   final String title;
@@ -28,6 +28,9 @@ class LogModel {
   @HiveField(7)
   final String teamId;
 
+  @HiveField(8)
+  final bool isSynced;
+
   LogModel({
     this.id,
     required this.title,
@@ -37,11 +40,12 @@ class LogModel {
     required this.username,
     required this.authorId,
     required this.teamId,
+    this.isSynced = false,
   });
 
   Map<String, dynamic> toMap() {
     return {
-      '_id': id ?? ObjectId(),
+      '_id': id != null ? ObjectId.fromHexString(id!) : ObjectId(),
       'title': title,
       'date': date,
       'desc': desc,
@@ -54,7 +58,7 @@ class LogModel {
 
   factory LogModel.fromMap(Map<String, dynamic> map) {
     return LogModel(
-      id: map['_id'] as ObjectId?,
+      id: (map['_id'] as ObjectId?)?.toHexString(),
       title: map['title'] ?? '',
       date: map['date'] ?? '',
       desc: map['desc'] ?? '',

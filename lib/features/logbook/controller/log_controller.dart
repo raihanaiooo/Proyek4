@@ -1,22 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:logbook_app_01/services/mongo_service.dart';
-// import 'package:shared_preferences/shared_preferences.dart';
+import 'package:hive/hive.dart';
+
 import '../models/log_model.dart';
+import 'package:logbook_app_01/services/mongo_service.dart';
 import 'package:logbook_app_01/services/access_control_service.dart';
+import 'package:logbook_app_01/helpers/log_helper.dart';
 
 class LogController {
   final ValueNotifier<List<LogModel>> logsNotifier = ValueNotifier([]);
-  ValueNotifier<List<LogModel>> filteredLogs = ValueNotifier([]);
+  final ValueNotifier<List<LogModel>> filteredLogs = ValueNotifier([]);
+
   String _username = "User";
   late String _currentUserId;
   late String _currentUserRole;
 
-  // String get _storageKey => "user_logs_data_$_username";
-
   Future<void> init(String username) async {
     _username = username;
-    // await loadLogs();
-    // await loadFromDisk();
   }
 
   void setCurrentUser({required String userId, required String role}) {
@@ -25,12 +24,33 @@ class LogController {
   }
 
   Future<List<LogModel>> getLogs() async {
-    return await MongoService().getLogsByUser(_username);
-  }
+    final box = Hive.box<LogModel>('logbook_box');
+    final localData = box.values.toList();
+    if (localData.isNotEmpty) {
+      logsNotifier.value = localData;
+      filteredLogs.value = localData;
+    }
+    try {
+      final data = await MongoService().getLogsByUser(_username);
 
-  // LogController() {
-  //   loadFromDisk();
-  // }
+      await LogHelper.writeLog(
+        "INFO: Fetch logs success for $_username",
+        source: "log_controller.dart",
+        level: 3,
+      );
+
+      logsNotifier.value = data;
+      filteredLogs.value = data;
+      return data;
+    } catch (e) {
+      await LogHelper.writeLog(
+        "ERROR: Fetch logs failed - $e",
+        source: "log_controller.dart",
+        level: 1,
+      );
+      return [];
+    }
+  }
 
   void searchLog(String query) {
     if (query.isEmpty) {
@@ -44,24 +64,41 @@ class LogController {
 
   Future<void> addLog(String title, String desc, String category) async {
     final newLog = LogModel(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
       title: title,
       desc: desc,
-      date: DateTime.now().toString(),
+      date: DateTime.now().toIso8601String(),
       category: category,
       username: _username,
-      authorId:
-          _username, // Assuming username is unique and can serve as authorId
-      teamId: 'default_team', // Placeholder teamId, adjust as needed
+      authorId: _currentUserId,
+      teamId: 'default_team',
     );
-    await MongoService().insertLog(newLog);
+
+    final box = Hive.box<LogModel>('logbook_box');
+    await box.put(newLog.id.toString(), newLog);
+
     logsNotifier.value = [...logsNotifier.value, newLog];
     filteredLogs.value = logsNotifier.value;
-    // saveToDisk();
+
+    try {
+      await MongoService().insertLog(newLog);
+
+      await LogHelper.writeLog(
+        "SUCCESS: Log added & synced",
+        source: "log_controller.dart",
+        level: 2,
+      );
+    } catch (e) {
+      await LogHelper.writeLog(
+        "OFFLINE: Data saved locally only - $e",
+        source: "log_controller.dart",
+        level: 2,
+      );
+    }
   }
 
   Future<void> updateLog(
     LogModel log,
-    // int index,
     String title,
     String desc,
     String category,
@@ -70,24 +107,29 @@ class LogController {
       id: log.id,
       title: title,
       desc: desc,
-      date: DateTime.now().toString(),
+      date: DateTime.now().toIso8601String(),
       category: category,
       username: _username,
       authorId: log.authorId,
       teamId: log.teamId,
     );
 
-    await MongoService().updateLog(updatedLog);
-    // final currentLogs = List<LogModel>.from(logsNotifier.value);
-    // currentLogs[index] = LogModel(
-    //   title: title,
-    //   desc: desc,
-    //   date: DateTime.now().toString(),
-    //   category: category,
-    // );
-    // logsNotifier.value = currentLogs;
-    // filteredLogs.value = logsNotifier.value;
-    // saveToDisk();
+    try {
+      await MongoService().updateLog(updatedLog);
+
+      await LogHelper.writeLog(
+        "SUCCESS: Log updated",
+        source: "log_controller.dart",
+        level: 2,
+      );
+    } catch (e) {
+      await LogHelper.writeLog(
+        "ERROR: Update failed - $e",
+        source: "log_controller.dart",
+        level: 1,
+      );
+      rethrow;
+    }
   }
 
   Future<void> removeLog(LogModel log) async {
@@ -100,41 +142,30 @@ class LogController {
     );
 
     if (!canDelete) {
+      await LogHelper.writeLog(
+        "SECURITY: Delete denied for $_currentUserId",
+        source: "log_controller.dart",
+        level: 1,
+      );
+
       throw Exception(
         "Akses ditolak: Anda tidak memiliki izin menghapus log ini.",
       );
     }
+
     if (log.id != null) {
       await MongoService().deleteLog(log.id!);
+
+      logsNotifier.value = logsNotifier.value
+          .where((l) => l.id != log.id)
+          .toList();
+      filteredLogs.value = logsNotifier.value;
+
+      await LogHelper.writeLog(
+        "SUCCESS: Log deleted",
+        source: "log_controller.dart",
+        level: 2,
+      );
     }
-    // final currentLogs = List<LogModel>.from(logsNotifier.value);
-    // currentLogs.removeAt(index);
-    // logsNotifier.value = currentLogs;
-    // filteredLogs.value = logsNotifier.value;
-    // saveToDisk();
   }
-
-  // Future<void> saveToDisk() async {
-  //   final prefs = await SharedPreferences.getInstance();
-  //   final String encodedData = jsonEncode(
-  //     logsNotifier.value.map((e) => e.toMap()).toList(),
-  //   );
-  //   await prefs.setString(_storageKey, encodedData);
-  // }
-
-  // Future<void> loadFromDisk() async {
-  //   final prefs = await SharedPreferences.getInstance();
-  //   final String? rawJson = prefs.getString(_storageKey);
-
-  //   if (rawJson != null) {
-  //     logsNotifier.value = _mapJsonToLogs(rawJson);
-  //   }
-
-  //   filteredLogs.value = logsNotifier.value;
-  // }
-
-  // List<LogModel> _mapJsonToLogs(String rawJson) {
-  //   final Iterable decoded = jsonDecode(rawJson);
-  //   return decoded.map((e) => LogModel.fromMap(e)).toList();
-  // }
 }

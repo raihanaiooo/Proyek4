@@ -5,8 +5,11 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:logbook_app_01/services/mongo_service.dart';
 import 'package:logbook_app_01/features/logbook/models/log_model.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('id_ID', null);
   await dotenv.load(fileName: ".env");
   await MongoService().connect();
 
