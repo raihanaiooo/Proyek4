@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
+import 'package:mongo_dart/mongo_dart.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 import '../models/log_model.dart';
 import 'package:logbook_app_01/services/mongo_service.dart';
 import 'package:logbook_app_01/services/access_control_service.dart';
 import 'package:logbook_app_01/helpers/log_helper.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:mongo_dart/mongo_dart.dart';
 
 class LogController {
   final ValueNotifier<List<LogModel>> logsNotifier = ValueNotifier([]);
@@ -25,16 +25,13 @@ class LogController {
     _currentUserRole = role;
   }
 
-  // Cek Koneksi Internet
   Future<bool> _isOnline() async {
     final result = await Connectivity().checkConnectivity();
     return result != ConnectivityResult.none;
   }
 
-  // Tampilkan log dari Hive terlebih dahulu, lalu sinkronisasi dengan MongoDB jika online
   Future<List<LogModel>> getLogs() async {
     final box = Hive.box<LogModel>('logbook_box');
-
     final localData = box.values.toList();
     logsNotifier.value = localData;
     filteredLogs.value = localData;
@@ -42,48 +39,44 @@ class LogController {
     if (await _isOnline()) {
       try {
         final remoteData = await MongoService().getLogsByUser(_username);
-
-        // Agar data tidak duplikat
         for (final log in remoteData) {
           if (log.id != null) {
             await box.put(log.id!, log.copyWith(isSynced: true));
           }
         }
-
         final mergedData = box.values.toList();
         logsNotifier.value = mergedData;
         filteredLogs.value = mergedData;
-
-        // Push data yang belum ke sync ke MongoDB
         await _syncPendingLogs();
-
-        await LogHelper.writeLog(
-          "INFO: Fetch logs success for $_username",
-          source: "log_controller.dart",
-          level: 3,
-        );
-
         return mergedData;
       } catch (e) {
         await LogHelper.writeLog(
-          "ERROR: Fetch logs failed - $e",
+          "WARN: Remote fetch failed, using local - $e",
           source: "log_controller.dart",
-          level: 1,
+          level: 2,
         );
       }
     }
     return box.values.toList();
   }
 
-  // Semua log dengan isSynced=false akan dicoba push ke MongoDB
   Future<void> _syncPendingLogs() async {
     final box = Hive.box<LogModel>('logbook_box');
     final unsyncedLogs = box.values.where((log) => !log.isSynced).toList();
 
     for (final log in unsyncedLogs) {
+      if (log.id == null || log.id!.length != 24) {
+        await box.delete(log.id);
+        await LogHelper.writeLog(
+          "CLEANUP: Hapus log dengan ID tidak valid: ${log.id}",
+          source: "log_controller.dart",
+          level: 2,
+        );
+        continue;
+      }
+
       try {
         await MongoService().insertLog(log);
-
         await box.put(log.id!, log.copyWith(isSynced: true));
 
         await LogHelper.writeLog(
@@ -99,6 +92,9 @@ class LogController {
         );
       }
     }
+
+    logsNotifier.value = box.values.toList();
+    filteredLogs.value = logsNotifier.value;
   }
 
   void searchLog(String query) {
@@ -106,12 +102,21 @@ class LogController {
       filteredLogs.value = logsNotifier.value;
     } else {
       filteredLogs.value = logsNotifier.value
-          .where((log) => log.title.toLowerCase().contains(query.toLowerCase()))
+          .where(
+            (log) =>
+                log.title.toLowerCase().contains(query.toLowerCase()) ||
+                log.desc.toLowerCase().contains(query.toLowerCase()),
+          )
           .toList();
     }
   }
 
-  Future<void> addLog(String title, String desc, String category) async {
+  Future<void> addLog(
+    String title,
+    String desc,
+    String category, {
+    bool isPublic = false,
+  }) async {
     final newLog = LogModel(
       id: ObjectId().toHexString(),
       title: title,
@@ -122,6 +127,7 @@ class LogController {
       authorId: _currentUserId,
       teamId: 'default_team',
       isSynced: false,
+      isPublic: isPublic,
     );
 
     final box = Hive.box<LogModel>('logbook_box');
@@ -163,8 +169,9 @@ class LogController {
     LogModel log,
     String title,
     String desc,
-    String category,
-  ) async {
+    String category, {
+    bool? isPublic,
+  }) async {
     final updatedLog = LogModel(
       id: log.id,
       title: title,
@@ -175,6 +182,7 @@ class LogController {
       authorId: log.authorId,
       teamId: log.teamId,
       isSynced: false,
+      isPublic: isPublic ?? log.isPublic,
     );
 
     final box = Hive.box<LogModel>('logbook_box');
@@ -206,22 +214,18 @@ class LogController {
     }
   }
 
+  // Task 5: Hanya owner yang bisa hapus, role tidak relevan
   Future<void> removeLog(LogModel log) async {
     final isOwner = log.authorId == _currentUserId;
-    final canDelete = AccessControlService.canPerform(
-      _currentUserRole,
-      AccessControlService.actionDelete,
-      isOwner: isOwner,
-    );
 
-    if (!canDelete) {
+    if (!isOwner) {
       await LogHelper.writeLog(
-        "SECURITY: Delete denied for $_currentUserId",
+        "SECURITY: Delete denied for $_currentUserId (bukan pemilik)",
         source: "log_controller.dart",
         level: 1,
       );
       throw Exception(
-        "Akses ditolak: Anda tidak memiliki izin menghapus log ini.",
+        "Akses ditolak: Hanya pemilik catatan yang dapat menghapus.",
       );
     }
 
@@ -236,6 +240,8 @@ class LogController {
     filteredLogs.value = logsNotifier.value;
 
     if (await _isOnline()) {
+      if (log.id!.length != 24) return;
+
       try {
         await MongoService().deleteLog(log.id!);
 

@@ -31,6 +31,9 @@ class LogModel {
   @HiveField(8)
   final bool isSynced;
 
+  @HiveField(9)
+  final bool isPublic;
+
   LogModel({
     this.id,
     required this.title,
@@ -41,6 +44,7 @@ class LogModel {
     required this.authorId,
     required this.teamId,
     this.isSynced = false,
+    this.isPublic = false,
   });
 
   LogModel copyWith({
@@ -53,6 +57,7 @@ class LogModel {
     String? authorId,
     String? teamId,
     bool? isSynced,
+    bool? isPublic,
   }) {
     return LogModel(
       id: id ?? this.id,
@@ -64,6 +69,7 @@ class LogModel {
       authorId: authorId ?? this.authorId,
       teamId: teamId ?? this.teamId,
       isSynced: isSynced ?? this.isSynced,
+      isPublic: isPublic ?? this.isPublic,
     );
   }
 
@@ -77,6 +83,7 @@ class LogModel {
       'username': username,
       'authorId': authorId,
       'teamId': teamId,
+      'isPublic': isPublic,
     };
   }
 
@@ -90,6 +97,7 @@ class LogModel {
       username: map['username'] ?? '',
       authorId: map['authorId'] ?? 'unknown_user',
       teamId: map['teamId'] ?? 'no_team',
+      isPublic: map['isPublic'] ?? false,
     );
   }
 }

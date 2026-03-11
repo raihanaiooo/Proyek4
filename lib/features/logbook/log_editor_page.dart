@@ -6,8 +6,14 @@ import 'package:logbook_app_01/features/logbook/controller/log_controller.dart';
 class LogEditorPage extends StatefulWidget {
   final LogModel? log;
   final LogController controller;
+  final String currentUserId;
 
-  const LogEditorPage({super.key, this.log, required this.controller});
+  const LogEditorPage({
+    super.key,
+    this.log,
+    required this.controller,
+    required this.currentUserId,
+  });
 
   @override
   State<LogEditorPage> createState() => _LogEditorPageState();
@@ -16,8 +22,11 @@ class LogEditorPage extends StatefulWidget {
 class _LogEditorPageState extends State<LogEditorPage> {
   late TextEditingController _titleController;
   late TextEditingController _descController;
-  final List<String> categories = ["Pekerjaan", "Pribadi", "Urgent"];
+
+  // Homework: kategori sesuai spesifikasi tugas
+  final List<String> categories = ["Mechanical", "Electronic", "Software"];
   String? _selectedCategory;
+  bool _isPublic = false;
 
   @override
   void initState() {
@@ -25,6 +34,7 @@ class _LogEditorPageState extends State<LogEditorPage> {
     _titleController = TextEditingController(text: widget.log?.title ?? '');
     _descController = TextEditingController(text: widget.log?.desc ?? '');
     _selectedCategory = widget.log?.category ?? categories.first;
+    _isPublic = widget.log?.isPublic ?? false;
     _descController.addListener(() => setState(() {}));
   }
 
@@ -41,6 +51,7 @@ class _LogEditorPageState extends State<LogEditorPage> {
         _titleController.text,
         _descController.text,
         _selectedCategory!,
+        isPublic: _isPublic,
       );
     } else {
       await widget.controller.updateLog(
@@ -48,10 +59,37 @@ class _LogEditorPageState extends State<LogEditorPage> {
         _titleController.text,
         _descController.text,
         _selectedCategory!,
+        isPublic: _isPublic,
       );
     }
 
-    Navigator.pop(context);
+    if (mounted) Navigator.pop(context);
+  }
+
+  Color _getCategoryColor(String category) {
+    switch (category) {
+      case "Mechanical":
+        return Colors.green;
+      case "Electronic":
+        return Colors.blue;
+      case "Software":
+        return Colors.purple;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  IconData _getCategoryIcon(String category) {
+    switch (category) {
+      case "Mechanical":
+        return Icons.build;
+      case "Electronic":
+        return Icons.electrical_services;
+      case "Software":
+        return Icons.code;
+      default:
+        return Icons.label;
+    }
   }
 
   @override
@@ -84,26 +122,59 @@ class _LogEditorPageState extends State<LogEditorPage> {
                 children: [
                   TextField(
                     controller: _titleController,
-                    decoration: const InputDecoration(labelText: "Judul"),
+                    decoration: const InputDecoration(
+                      labelText: "Judul",
+                      border: OutlineInputBorder(),
+                    ),
                   ),
                   const SizedBox(height: 10),
+
+                  // Homework: Dropdown Mechanical / Electronic / Software
                   DropdownButtonFormField<String>(
                     value: _selectedCategory,
                     items: categories.map((cat) {
-                      return DropdownMenuItem(value: cat, child: Text(cat));
+                      return DropdownMenuItem(
+                        value: cat,
+                        child: Row(
+                          children: [
+                            Icon(
+                              _getCategoryIcon(cat),
+                              color: _getCategoryColor(cat),
+                              size: 18,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(cat),
+                          ],
+                        ),
+                      );
                     }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedCategory = value!;
-                      });
-                    },
+                    onChanged: (value) =>
+                        setState(() => _selectedCategory = value!),
                     decoration: const InputDecoration(
                       labelText: "Kategori",
                       border: OutlineInputBorder(),
                     ),
                   ),
-
                   const SizedBox(height: 10),
+
+                  // Task 5: Toggle visibilitas privat/publik
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(
+                      _isPublic
+                          ? "Publik (dapat dilihat tim)"
+                          : "Privat (hanya saya)",
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                    secondary: Icon(
+                      _isPublic ? Icons.public : Icons.lock,
+                      color: _isPublic ? Colors.green : Colors.grey,
+                    ),
+                    value: _isPublic,
+                    onChanged: (val) => setState(() => _isPublic = val),
+                  ),
+                  const SizedBox(height: 10),
+
                   Expanded(
                     child: TextField(
                       controller: _descController,

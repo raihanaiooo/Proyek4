@@ -6,7 +6,7 @@ import 'package:logbook_app_01/features/logbook/models/log_model.dart';
 class MongoService {
   static final MongoService _instance = MongoService._internal();
 
-  // Menggunakan nullable agar kita bisa mengecek status inisialisasi
+  // Menggunakan nullable agar bisa mengecek status inisialisasi
   Db? _db;
   DbCollection? _collection;
 
@@ -15,7 +15,7 @@ class MongoService {
   factory MongoService() => _instance;
   MongoService._internal();
 
-  /// Fungsi Internal untuk memastikan koleksi siap digunakan (Anti-LateInitializationError)
+  /// Fungsi Internal untuk memastikan koleksi siap digunakan
   Future<DbCollection> _getSafeCollection() async {
     if (_db == null || !_db!.isConnected || _collection == null) {
       await LogHelper.writeLog(
@@ -35,8 +35,6 @@ class MongoService {
       if (dbUri == null) throw Exception("MONGODB_URI tidak ditemukan di .env");
 
       _db = await Db.create(dbUri);
-
-      // Timeout 15 detik agar lebih toleran terhadap jaringan seluler
       await _db!.open().timeout(
         const Duration(seconds: 15),
         onTimeout: () {

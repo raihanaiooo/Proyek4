@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:logbook_app_01/features/auth/login_controller.dart';
-// import 'package:logbook_app_01/features/logbook/counter_view.dart';
 import 'package:logbook_app_01/features/logbook/views/log_view.dart';
 
 class LoginView extends StatefulWidget {
