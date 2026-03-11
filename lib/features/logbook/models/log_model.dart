@@ -43,6 +43,30 @@ class LogModel {
     this.isSynced = false,
   });
 
+  LogModel copyWith({
+    String? id,
+    String? title,
+    String? desc,
+    String? date,
+    String? category,
+    String? username,
+    String? authorId,
+    String? teamId,
+    bool? isSynced,
+  }) {
+    return LogModel(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      desc: desc ?? this.desc,
+      date: date ?? this.date,
+      category: category ?? this.category,
+      username: username ?? this.username,
+      authorId: authorId ?? this.authorId,
+      teamId: teamId ?? this.teamId,
+      isSynced: isSynced ?? this.isSynced,
+    );
+  }
+
   Map<String, dynamic> toMap() {
     return {
       '_id': id != null ? ObjectId.fromHexString(id!) : ObjectId(),

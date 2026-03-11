@@ -9,7 +9,7 @@ class LogItemWidget extends StatelessWidget {
   const LogItemWidget({
     super.key,
     required this.log,
-    required this.onEdit,
+    this.onEdit,
     required this.formattedDate,
   });
 
@@ -28,9 +28,10 @@ class LogItemWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    return Material(
+      color: Colors.transparent,
       child: Card(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         color: _getCategoryColor(log.category),
         elevation: 4,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -78,10 +79,15 @@ class LogItemWidget extends StatelessWidget {
                   ],
                 ),
               ),
-              IconButton(
-                icon: const Icon(Icons.edit_outlined),
-                color: Colors.blue,
-                onPressed: onEdit,
+
+              // AREA TAP DIPERBESAR
+              InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: onEdit,
+                child: Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: const Icon(Icons.edit_outlined, color: Colors.blue),
+                ),
               ),
             ],
           ),

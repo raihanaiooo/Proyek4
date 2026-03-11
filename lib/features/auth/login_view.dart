@@ -30,20 +30,19 @@ class _LoginViewState extends State<LoginView> {
       return;
     }
 
-    bool isSuccess = _controller.login(user, pass);
+    final userData = _controller.login(user, pass);
 
-    if (isSuccess) {
-      await _controller.saveCurrentUser(user);
-
+    if (userData != null) {
+      await _controller.saveCurrentUser(userData);
       _attempts = 0;
 
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
           builder: (context) => LogView(
-            username: user,
-            currentUserId: user,
-            currentUserRole: 'user',
+            username: userData.username,
+            currentUserId: userData.userId,
+            currentUserRole: userData.role,
           ),
         ),
       );

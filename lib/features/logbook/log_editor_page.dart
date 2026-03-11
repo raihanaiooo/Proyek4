@@ -16,17 +16,15 @@ class LogEditorPage extends StatefulWidget {
 class _LogEditorPageState extends State<LogEditorPage> {
   late TextEditingController _titleController;
   late TextEditingController _descController;
-  late TextEditingController _categoryController;
+  final List<String> categories = ["Pekerjaan", "Pribadi", "Urgent"];
+  String? _selectedCategory;
 
   @override
   void initState() {
     super.initState();
     _titleController = TextEditingController(text: widget.log?.title ?? '');
     _descController = TextEditingController(text: widget.log?.desc ?? '');
-    _categoryController = TextEditingController(
-      text: widget.log?.category ?? '',
-    );
-
+    _selectedCategory = widget.log?.category ?? categories.first;
     _descController.addListener(() => setState(() {}));
   }
 
@@ -42,14 +40,14 @@ class _LogEditorPageState extends State<LogEditorPage> {
       await widget.controller.addLog(
         _titleController.text,
         _descController.text,
-        _categoryController.text,
+        _selectedCategory!,
       );
     } else {
       await widget.controller.updateLog(
         widget.log!,
         _titleController.text,
         _descController.text,
-        _categoryController.text,
+        _selectedCategory!,
       );
     }
 
@@ -60,7 +58,6 @@ class _LogEditorPageState extends State<LogEditorPage> {
   void dispose() {
     _titleController.dispose();
     _descController.dispose();
-    _categoryController.dispose();
     super.dispose();
   }
 
@@ -90,10 +87,22 @@ class _LogEditorPageState extends State<LogEditorPage> {
                     decoration: const InputDecoration(labelText: "Judul"),
                   ),
                   const SizedBox(height: 10),
-                  TextField(
-                    controller: _categoryController,
-                    decoration: const InputDecoration(labelText: "Kategori"),
+                  DropdownButtonFormField<String>(
+                    value: _selectedCategory,
+                    items: categories.map((cat) {
+                      return DropdownMenuItem(value: cat, child: Text(cat));
+                    }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedCategory = value!;
+                      });
+                    },
+                    decoration: const InputDecoration(
+                      labelText: "Kategori",
+                      border: OutlineInputBorder(),
+                    ),
                   ),
+
                   const SizedBox(height: 10),
                   Expanded(
                     child: TextField(
