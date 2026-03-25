@@ -6,7 +6,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import '../models/log_model.dart';
 import 'package:logbook_app_01/services/mongo_service.dart';
 import 'package:logbook_app_01/services/access_control_service.dart';
-import 'package:logbook_app_01/helpers/log_helper.dart';
+import 'package:logbook_app_01/features/logbook/helpers/log_helper.dart';
 
 class LogController {
   final ValueNotifier<List<LogModel>> logsNotifier = ValueNotifier([]);
@@ -15,14 +15,20 @@ class LogController {
   String _username = "User";
   late String _currentUserId;
   late String _currentUserRole;
+  late String _teamId;
 
   Future<void> init(String username) async {
     _username = username;
   }
 
-  void setCurrentUser({required String userId, required String role}) {
+  void setCurrentUser({
+    required String userId,
+    required String role,
+    required String teamId,
+  }) {
     _currentUserId = userId;
     _currentUserRole = role;
+    _teamId = teamId;
   }
 
   Future<bool> _isOnline() async {
@@ -38,7 +44,8 @@ class LogController {
 
     if (await _isOnline()) {
       try {
-        final remoteData = await MongoService().getLogsByUser(_username);
+        // final remoteData = await MongoService().getLogsByUser(_username);
+        final remoteData = await MongoService().getLogsByTeam(_teamId);
         for (final log in remoteData) {
           if (log.id != null) {
             await box.put(log.id!, log.copyWith(isSynced: true));
@@ -125,7 +132,7 @@ class LogController {
       category: category,
       username: _username,
       authorId: _currentUserId,
-      teamId: 'default_team',
+      teamId: _teamId,
       isSynced: false,
       isPublic: isPublic,
     );

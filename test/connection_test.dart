@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:logbook_app_01/services/mongo_service.dart';
-import 'package:logbook_app_01/helpers/log_helper.dart';
+import 'package:logbook_app_01/features/logbook/helpers/log_helper.dart';
 
 void main() {
   const String sourceFile = "connection_test.dart";

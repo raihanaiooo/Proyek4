@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:logbook_app_01/features/auth/login_controller.dart';
+import 'package:logbook_app_01/features/logbook/controller/auth/login_controller.dart';
 import 'package:logbook_app_01/features/logbook/views/log_view.dart';
 
 class LoginView extends StatefulWidget {
@@ -42,6 +42,7 @@ class _LoginViewState extends State<LoginView> {
             username: userData.username,
             currentUserId: userData.userId,
             currentUserRole: userData.role,
+            currentTeamId: userData.teamId,
           ),
         ),
       );

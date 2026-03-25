@@ -1,6 +1,6 @@
 import 'package:mongo_dart/mongo_dart.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:logbook_app_01/helpers/log_helper.dart';
+import 'package:logbook_app_01/features/logbook/helpers/log_helper.dart';
 import 'package:logbook_app_01/features/logbook/models/log_model.dart';
 
 class MongoService {
@@ -62,29 +62,54 @@ class MongoService {
   }
 
   /// READ: Mengambil data dari Cloud
-  Future<List<LogModel>> getLogsByUser(String username) async {
+  // Future<List<LogModel>> getLogsByUser(String username) async {
+  //   try {
+  //     final collection = await _getSafeCollection();
+
+  //     await LogHelper.writeLog(
+  //       "INFO: Fetching data for user: $username",
+  //       source: _source,
+  //       level: 3,
+  //     );
+
+  //     final List<Map<String, dynamic>> data = await collection.find({
+  //       'username': username,
+  //     }).toList();
+
+  //     return data.map((json) => LogModel.fromMap(json)).toList();
+  //   } catch (e) {
+  //     await LogHelper.writeLog(
+  //       "ERROR: Fetch Failed - $e",
+  //       source: _source,
+  //       level: 1,
+  //     );
+  //     throw Exception("OFFLINE_MODE");
+  //     // return [];
+  //   }
+  // }
+
+  Future<List<LogModel>> getLogsByTeam(String teamId) async {
     try {
       final collection = await _getSafeCollection();
 
       await LogHelper.writeLog(
-        "INFO: Fetching data for user: $username",
+        "INFO: Fetching data for team: $teamId",
         source: _source,
         level: 3,
       );
 
       final List<Map<String, dynamic>> data = await collection.find({
-        'username': username,
+        'teamId': teamId,
       }).toList();
 
       return data.map((json) => LogModel.fromMap(json)).toList();
     } catch (e) {
       await LogHelper.writeLog(
-        "ERROR: Fetch Failed - $e",
+        "ERROR: Fetch Team Failed - $e",
         source: _source,
         level: 1,
       );
       throw Exception("OFFLINE_MODE");
-      // return [];
     }
   }
 

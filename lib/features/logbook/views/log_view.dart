@@ -8,18 +8,20 @@ import '../controller/log_controller.dart';
 import '../widgets/log_item_widget.dart';
 import '../widgets/logout_dialog.dart';
 import 'package:logbook_app_01/services/mongo_service.dart';
-import 'package:logbook_app_01/features/logbook/log_editor_page.dart';
+import 'package:logbook_app_01/features/logbook/views/log_editor_page.dart';
 
 class LogView extends StatefulWidget {
   final String username;
   final String currentUserId;
   final String currentUserRole;
+  final String currentTeamId;
 
   const LogView({
     super.key,
     required this.username,
     required this.currentUserId,
     required this.currentUserRole,
+    required this.currentTeamId,
   });
 
   @override
@@ -41,6 +43,7 @@ class _LogViewState extends State<LogView> {
     _controller.setCurrentUser(
       userId: widget.currentUserId,
       role: widget.currentUserRole,
+      teamId: widget.currentTeamId,
     );
     _logsFuture = _fetchLogs();
   }

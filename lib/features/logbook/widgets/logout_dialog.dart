@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../onboarding/onboarding_view.dart';
+import '../views/onboarding/onboarding_view.dart';
 
 class LogoutDialog extends StatelessWidget {
   const LogoutDialog({super.key});

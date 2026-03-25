@@ -120,7 +120,6 @@ class LogItemWidget extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
 
-                  // Badge kategori + tanggal — Wrap agar tidak overflow
                   Wrap(
                     spacing: 8,
                     runSpacing: 4,
