@@ -52,7 +52,7 @@ class CounterController {
 
     if (_step > 1) {
       _size = parse;
-      _step -= _size;
+      _step = (_step - _size).clamp(0, double.maxFinite.toInt());
 
       await saveLastValue(_step, _username);
       await _addHistory("User mengurangi nilai sebesar $_size");

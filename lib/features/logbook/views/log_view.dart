@@ -7,7 +7,7 @@ import '../models/log_model.dart';
 import '../controller/log_controller.dart';
 import '../widgets/log_item_widget.dart';
 import '../widgets/logout_dialog.dart';
-import 'package:logbook_app_01/services/mongo_service.dart';
+import 'package:logbook_app_01/features/logbook/services/mongo_service.dart';
 import 'package:logbook_app_01/features/logbook/views/log_editor_page.dart';
 
 class LogView extends StatefulWidget {

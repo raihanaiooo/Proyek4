@@ -61,33 +61,6 @@ class MongoService {
     }
   }
 
-  /// READ: Mengambil data dari Cloud
-  // Future<List<LogModel>> getLogsByUser(String username) async {
-  //   try {
-  //     final collection = await _getSafeCollection();
-
-  //     await LogHelper.writeLog(
-  //       "INFO: Fetching data for user: $username",
-  //       source: _source,
-  //       level: 3,
-  //     );
-
-  //     final List<Map<String, dynamic>> data = await collection.find({
-  //       'username': username,
-  //     }).toList();
-
-  //     return data.map((json) => LogModel.fromMap(json)).toList();
-  //   } catch (e) {
-  //     await LogHelper.writeLog(
-  //       "ERROR: Fetch Failed - $e",
-  //       source: _source,
-  //       level: 1,
-  //     );
-  //     throw Exception("OFFLINE_MODE");
-  //     // return [];
-  //   }
-  // }
-
   Future<List<LogModel>> getLogsByTeam(String teamId) async {
     try {
       final collection = await _getSafeCollection();
@@ -195,3 +168,29 @@ class MongoService {
     }
   }
 }
+  /// READ: Mengambil data dari Cloud
+  // Future<List<LogModel>> getLogsByUser(String username) async {
+  //   try {
+  //     final collection = await _getSafeCollection();
+
+  //     await LogHelper.writeLog(
+  //       "INFO: Fetching data for user: $username",
+  //       source: _source,
+  //       level: 3,
+  //     );
+
+  //     final List<Map<String, dynamic>> data = await collection.find({
+  //       'username': username,
+  //     }).toList();
+
+  //     return data.map((json) => LogModel.fromMap(json)).toList();
+  //   } catch (e) {
+  //     await LogHelper.writeLog(
+  //       "ERROR: Fetch Failed - $e",
+  //       source: _source,
+  //       level: 1,
+  //     );
+  //     throw Exception("OFFLINE_MODE");
+  //     // return [];
+  //   }
+  // }
