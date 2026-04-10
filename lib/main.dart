@@ -4,9 +4,20 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:logbook_app_01/features/logbook/models/log_model.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:camera/camera.dart';
+
+List<CameraDescription> cameras = [];
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  try {
+    // Ambil daftar kamera yang tersedia di perangkat
+    cameras = await availableCameras();
+  } on CameraException catch (e) {
+    print('Error: ${e.code}\nError Message: ${e.description}');
+  }
+
   await initializeDateFormatting('id_ID', null);
   await dotenv.load(fileName: ".env");
 

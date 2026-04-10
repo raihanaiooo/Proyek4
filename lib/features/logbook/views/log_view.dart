@@ -9,6 +9,7 @@ import '../widgets/log_item_widget.dart';
 import '../widgets/logout_dialog.dart';
 import 'package:logbook_app_01/features/logbook/services/mongo_service.dart';
 import 'package:logbook_app_01/features/logbook/views/log_editor_page.dart';
+import 'package:logbook_app_01/features/logbook/vision/vision_view.dart';
 
 class LogView extends StatefulWidget {
   final String username;
@@ -395,9 +396,28 @@ class _LogViewState extends State<LogView> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _openAddPage,
-        child: const Icon(Icons.add),
+      floatingActionButton: Stack(
+        alignment: Alignment.bottomRight,
+        children: [
+          // FAB kamera — posisi lebih ke atas
+          Padding(
+            padding: const EdgeInsets.only(bottom: 70),
+            child: FloatingActionButton(
+              heroTag: "fab_camera",
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const VisionView()),
+              ),
+              child: const Icon(Icons.camera_alt),
+            ),
+          ),
+          // FAB tambah log — posisi bawah
+          FloatingActionButton(
+            heroTag: "fab_add",
+            onPressed: _openAddPage,
+            child: const Icon(Icons.add),
+          ),
+        ],
       ),
     );
   }
