@@ -66,7 +66,7 @@ Aplikasi Flutter untuk inspeksi dan pencatatan kerusakan jalan secara cerdas, di
 ### 📓 Logbook
 - Tambah, edit, dan hapus catatan lapangan
 - Sinkronisasi dengan MongoDB
-- Role-based access control (owner, admin, viewer)
+- Role-based access control (owner, Ketua, viewer)
 - Indikator sinkronisasi cloud
 
 ---
@@ -140,7 +140,7 @@ dependencies:
 | `VisionController` | Lifecycle kamera, mock detection timer, flashlight, overlay toggle |
 | `ImageProcessor` | Operasi PCD: grayscale, kontras, histogram, konvolusi, median filter |
 | `LogController` | CRUD logbook, sinkronisasi MongoDB, state management |
-| `AccessControlService` | Role-based permission (admin, member, viewer) |
+| `AccessControlService` | Role-based permission (Ketua, Anggota, viewer) Asisten
 
 ### Data Layer
 | Komponen | Tanggung Jawab |
@@ -177,9 +177,9 @@ dependencies:
 
 | Role | Buat | Edit | Hapus |
 |------|------|------|-------|
-| Admin | ✅ | ✅ (semua) | ✅ (semua) |
-| Member | ✅ | ✅ (milik sendiri) | ✅ (milik sendiri) |
-| Viewer | ❌ | ❌ | ❌ |
+| Ketua | ✅ | ✅ (semua) | ✅ (semua) |
+| Anggota | ✅ | ✅ (milik sendiri) | ✅ (milik sendiri) |
+| Asisten | ❌ | ❌ | ❌ |
 
 ---
 
