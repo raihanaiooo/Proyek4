@@ -66,7 +66,7 @@ Aplikasi Flutter untuk inspeksi dan pencatatan kerusakan jalan secara cerdas, di
 ### 📓 Logbook
 - Tambah, edit, dan hapus catatan lapangan
 - Sinkronisasi dengan MongoDB
-- Role-based access control (owner, Ketua, viewer)
+- Role-based access control (Ketua, Anggota, Asisten)
 - Indikator sinkronisasi cloud
 
 ---
