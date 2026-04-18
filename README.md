@@ -177,7 +177,7 @@ dependencies:
 
 | Role | Buat | Edit | Hapus |
 |------|------|------|-------|
-| Ketua | ✅ | ✅ (semua) | ✅ (semua) |
+| Ketua | ✅ | ✅ (milik sendiri) | ✅ (milik sendiri) |
 | Anggota | ✅ | ✅ (milik sendiri) | ✅ (milik sendiri) |
 | Asisten | ❌ | ❌ | ❌ |
 
