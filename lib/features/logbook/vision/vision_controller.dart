@@ -22,6 +22,9 @@ class VisionController extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   Future<void> initCamera() async {
+    isInitialized = false;
+    errorMessage = null;
+    notifyListeners();
     try {
       final cameras = await availableCameras();
       if (cameras.isEmpty) {
@@ -38,10 +41,23 @@ class VisionController extends ChangeNotifier with WidgetsBindingObserver {
       );
 
       await controller!.initialize();
-      isInitialized = true;
-      errorMessage = null;
+      if (controller != null && controller!.value.isInitialized) {
+        isInitialized = true;
+        errorMessage = null;
+      }
     } catch (e) {
-      errorMessage = "Failed to initialize camera: $e";
+      if (e is CameraException) {
+        switch (e.code) {
+          case 'CameraAccessDenied':
+            errorMessage = "Akses kamera ditolak. Silakan buka pengaturan.";
+            break;
+          default:
+            errorMessage = "Kamera error: ${e.description}";
+        }
+      } else {
+        errorMessage = "Gagal memuat kamera: $e";
+      }
+      isInitialized = false;
     }
     notifyListeners();
   }
@@ -87,19 +103,22 @@ class VisionController extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   void _generateMockDetection() {
+    if (!isInitialized) return;
     final random = Random();
-    final x = random.nextDouble() * 0.8 + 0.1;
-    final y = random.nextDouble() * 0.8 + 0.1;
-    final width = 0.2 + random.nextDouble() * 0.2;
-    final height = 0.1 + random.nextDouble() * 0.1;
+    if (random.nextDouble() < 0.2) {
+      currentDetections = [];
+    } else {
+      final x = random.nextDouble() * 0.6 + 0.1;
+      final y = random.nextDouble() * 0.6 + 0.1;
 
-    currentDetections = [
-      DetectionResult(
-        box: Rect.fromLTWH(x, y, width, height),
-        label: _getRandomDamageType(),
-        score: 0.85 + random.nextDouble() * 0.14,
-      ),
-    ];
+      currentDetections = [
+        DetectionResult(
+          box: Rect.fromLTWH(x, y, 0.3, 0.2),
+          label: _getRandomDamageType(),
+          score: 0.7 + random.nextDouble() * 0.29,
+        ),
+      ];
+    }
     notifyListeners();
   }
 
@@ -112,7 +131,7 @@ class VisionController extends ChangeNotifier with WidgetsBindingObserver {
       'D40': 'Pothole',
     };
     final type = types[Random().nextInt(types.length)];
-    return '[$type] ${labels[type]!}';
+    return '$type - ${labels[type]}';
   }
 
   @override
@@ -122,8 +141,9 @@ class VisionController extends ChangeNotifier with WidgetsBindingObserver {
       return;
 
     if (state == AppLifecycleState.inactive) {
-      cameraController.dispose();
       isInitialized = false;
+      cameraController.dispose();
+      controller = null;
       notifyListeners();
     } else if (state == AppLifecycleState.resumed) {
       initCamera();

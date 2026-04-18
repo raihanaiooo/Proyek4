@@ -25,7 +25,7 @@ class _VisionViewState extends State<VisionView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBodyBehindAppBar: true, // AppBar transparan di atas kamera
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.black.withOpacity(0.4),
         title: const Text(
@@ -72,7 +72,6 @@ class _VisionViewState extends State<VisionView> {
           return _buildVisionStack();
         },
       ),
-      // FAB di luar ListenableBuilder tapi dicek via controller
       floatingActionButton: ListenableBuilder(
         listenable: _visionController,
         builder: (context, _) {
@@ -82,8 +81,6 @@ class _VisionViewState extends State<VisionView> {
             onPressed: () async {
               final image = await _visionController.takePhoto();
               if (image != null && context.mounted) {
-                // Ganti SnackBar dengan navigasi ke PcdResultView
-                // jika sudah ada, atau tetap SnackBar:
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -142,7 +139,7 @@ class _VisionViewState extends State<VisionView> {
     return Stack(
       fit: StackFit.expand,
       children: [
-        // LAYER 1: Preview kamera full layar tanpa distorsi
+        // LAYER 1: Preview kamera full layar
         SizedBox.expand(child: CameraPreview(_visionController.controller!)),
 
         // LAYER 2: Overlay deteksi
